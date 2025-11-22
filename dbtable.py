@@ -86,13 +86,21 @@ class DbTable:
         cur.execute(sql)
         return cur.fetchall()
 
-    # Удаление сущностей нужно обоим таблицам, так что пусть определяется в родительском классе
-    def del_entities(self, where_clause):
+    def del_entities(self, where_clause=None):
+        """
+        where_clause: tuple(str, any)
+            (column_name, column_value)
+            пример: ("name", "Old Name")
+        """
+        sql = f"DELETE FROM {self.table_name()}"
+        params = ()
 
-        # строка не пишет условие where, если where_clause is None, то есть условие не передано
-        sql = (f"DELETE FROM {self.table_name()}"
-               f"{(where_clause is not None) * "WHERE %(col)s = %(val)s"}"
-                )
+        if where_clause is not None:
+            col, val = where_clause
+            sql += f" WHERE {col} = %s"
+            params = (val,)
+
         cur = self.dbconn.conn.cursor()
-        cur.execute(sql, where_clause)
-        return cur.fetchall
+        cur.execute(sql, params)
+        self.dbconn.conn.commit()
+

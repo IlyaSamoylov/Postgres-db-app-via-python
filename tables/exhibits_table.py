@@ -57,14 +57,25 @@ class ExhibitsTable(DbTable):
 	#  в этом же интерфейсе. Без суррогатных ключей, только нетехнические записи и номер на экране
 	# Удаление сущностей нужно обоим таблицам, так что пусть определяется в родительском классе
 
-	def select_by_col_id(self, target_id):
+	def select_by_col_id(self, collection_id):
 		sql = f"SELECT * FROM {self.table_name()} WHERE collection_id = %s"
 		cur = self.dbconn.conn.cursor()
-		cur.execute(sql, target_id)
-		return cur.fetchall
+		cur.execute(sql, (collection_id,))
+		return cur.fetchall()
 
-	def add_by_col_id(self, target_id, values):
-		self.insert_one(1)
-		pass
-	
+	def add_by_col_id(self, collection_id, values: dict):
+
+		# Добавляем collection_id
+		values["collection_id"] = collection_id
+
+		# Вытаскиваем все колонки (кроме id)
+		cols = self.column_names_without_id()
+
+		# Берём значения в правильном порядке
+		vals = [values[col] for col in cols]
+
+		# Используем insert_one (который уже безопасный)
+		self.insert_one(vals)
+
+
 

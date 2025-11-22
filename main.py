@@ -3,8 +3,8 @@ sys.path.append('tables')
 
 from project_config import *
 from dbconnection import *
-from tables.people_table import *
-from tables.phones_table import *
+# from tables.people_table import *
+# from tables.phones_table import *
 from tables.collections_table import *
 from tables.exhibits_table import *
 
@@ -28,6 +28,9 @@ class Main:
     def db_insert_somethings(self):
         colt = CollectionsTable()
         ext = ExhibitsTable()
+
+        # TODO: заполнить нормальными данными.
+        #  Не забыть, что надо также проверять валидность данных
         colt.insert_one(["Test", "Test", "Test"])
         colt.insert_one(["Test2", "Test2", "Test2"])
         colt.insert_one(["Test3", "Test3", "Test3"])
@@ -45,11 +48,75 @@ class Main:
     def show_main_menu(self):
         menu = """Добро пожаловать! 
 Основное меню (выберите цифру в соответствии с необходимым действием): 
-    1 - просмотр людей;
+    1 - просмотр коллекций;
     2 - сброс и инициализация таблиц;
     9 - выход."""
         print(menu)
         return
+    # _____________ВИДИМО, ВАЛИДАЦИЯ?__________________________________________________
+    # TODO: зачем?
+    def input_nonempty(self, prompt):
+        while True:
+            s = input(prompt).strip()
+
+            if s == "1":
+                return None
+            if len(s) == 0:
+                print("Поле не может быть пустым. Введите заново (или 1 для отмены).")
+                continue
+            return s
+    #  TODO: зачем 2?
+    def input_optional(self, prompt):
+        s = input(prompt).strip()
+
+        if s == "1":
+                return None
+        return s
+
+    def input_decimal_positive(self, prompt, allow_zero=True):
+        while True:
+            s = input(prompt).strip()
+
+            if s == "1":
+                return None
+            try:
+                v = float(s)
+            except ValueError:
+                print("Невалидное число. Повторите ввод (или 1 для отмены).")
+                continue
+            if v < 0 or (not allow_zero and v == 0):
+                print("Значение должно быть положительным.")
+                continue
+            return v
+
+    def input_smallint_century(self, prompt):
+        while True:
+            s = input(prompt).strip()
+
+            if s == "1":
+                return None
+            try:
+                v = int(s)
+            except ValueError:
+                print("Невалидное целое. Повторите ввод (или 1 для отмены).")
+                continue
+            if v > 21 or v < 0:
+                print("Век должен быть в диапазоне 0..21.")
+                continue
+            return v
+
+    def input_char_yn(self, prompt, default="y"):
+        while True:
+            s = input(prompt + f" (y/n, ENTER для {default}):").strip()
+
+            if s == "":
+                return default
+            if s not in ("y", "n"):
+                print("Введите 'y' или 'n'.")
+                continue
+            return s
+
+    # ______________________________________________________________________________
 
     def read_next_step(self):
         return input("=> ").strip()
@@ -66,7 +133,7 @@ class Main:
             return "0"
         else:
             return next_step
-            
+    #  TODO: сравнить потом с пробой
     def show_collections(self):
         self.collection_id = -1
         menu = """Просмотр списка коллекций!

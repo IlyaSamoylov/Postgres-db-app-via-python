@@ -8,6 +8,7 @@ from tables.phones_table import *
 from tables.collections_table import *
 from tables.exhibits_table import *
 
+#  TODO: Пересмотреть и исправить методы с people/phone на collections/exhibits
 class Main:
 
     config = ProjectConfig()
@@ -66,14 +67,14 @@ class Main:
         else:
             return next_step
             
-    def show_people(self):
-        self.person_id = -1
-        menu = """Просмотр списка людей!
-№\tФамилия\tИмя\tОтчество"""
+    def show_collections(self):
+        self.collection_id = -1
+        menu = """Просмотр списка коллекций!
+№\tНазвание\tОписание"""
         print(menu)
         lst = CollectionsTable().all()
         for i in lst:
-            print(str(i[1]) + "\t" + str(i[2]) + "\t" + str(i[0]) + "\t" + str(i[3]))
+            print(str(i[0]) + "\t" + str(i[1]) + "\t" + str(i[2]))
         menu = """Дальнейшие операции: 
     0 - возврат в главное меню;
     3 - добавление нового человека;
@@ -162,7 +163,7 @@ class Main:
                 next_step = self.read_next_step()
                 current_menu = self.after_main_menu(next_step)
             elif current_menu == "1":
-                self.show_people()
+                self.show_collections()
                 next_step = self.read_next_step()
                 current_menu = self.after_show_people(next_step)
             elif current_menu == "2":

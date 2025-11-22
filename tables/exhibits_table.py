@@ -50,3 +50,21 @@ class ExhibitsTable(DbTable):
 		cur = self.dbconn.conn.cursor()
 		cur.execute(sql, str(col_id))
 		return cur.fetchall()
+
+	# TODO: для таблицы Exhibits доработать функции просмотр списка сущностей по
+	#  указанному значению ключа из первой таблицы, добавление новых сущностей с этим ключом
+	#  (включая все проверки целостности данных и соответствия типам данных), удаление сущностей
+	#  в этом же интерфейсе. Без суррогатных ключей, только нетехнические записи и номер на экране
+	# Удаление сущностей нужно обоим таблицам, так что пусть определяется в родительском классе
+
+	def select_by_col_id(self, target_id):
+		sql = f"SELECT * FROM {self.table_name()} WHERE collection_id = %s"
+		cur = self.dbconn.conn.cursor()
+		cur.execute(sql, target_id)
+		return cur.fetchall
+
+	def add_by_col_id(self, target_id, values):
+		self.insert_one(1)
+		pass
+	
+

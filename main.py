@@ -1,3 +1,4 @@
+# TODO: Сравнить с эталонным main и узнать, не слишком ли сильно изменена изначальная логика. В идеале все же придерживаться изначального сценария
 import sys
 sys.path.append('tables')
 
@@ -7,7 +8,6 @@ from tables.collections_table import *
 from tables.exhibits_table import *
 from utils import *
 
-#  TODO: Пересмотреть и исправить методы с people/phone на collections/exhibits
 class Main:
 
     config = ProjectConfig()
@@ -73,75 +73,97 @@ class Main:
             print(k, v)
 
     # Collections UI ===================
-    #  TODO: сравнить потом с пробой. Проверить реализацию перелистывания
-    def show_collections(self, page=1, page_size=5):
-        # self.collection_id = -1
+    @table_paginator(page_size=5)
+    def show_collections(self):
+        table = CollectionsTable()
+        return table, table.columns(), table.all()
 
-        lst = CollectionsTable().all()
+    def after_show_collections(self, cmd):
+        menu = {
+            "3": "Добавить коллекцию",
+            "4": "Удалить коллекцию",
+            "5": "Просмотр экспонатов коллекции",
+            "6": "Редактировать коллекцию",
+            "0": "Возврат в главное меню",
+            "9": "Выход"
+        }
 
-        print("""Просмотр списка коллекций!\n№\tНазвание\tОписание""")
+        if cmd not in menu:
+            print("Неизвестная команда.")
+            return "1"
 
-        menu = {"": "Дальнейшие операции -",
-                "<": "- пролистнуть влево;",
-                ">": "- пролистнуть вправо;",
-                "0": "- возврат в главное меню;",
-                "3": "- добавление новой коллекции;",
-                "4": "- удаление коллекции;",
-                "5": " - просмотр экспонатов коллекции;",
-                "9": "- выход."
-                }
+        if cmd == "3":
+            self.add_collection()
+            return "1"
 
-        start = (page - 1) * page_size
-        end = (page * page_size) - 1
+        if cmd == "4":
+            self.delete_collection()
+            return "1"
 
-        for idx, row in enumerate(lst[start:end+1], 1) :
-            name = row[1]
-            desc = row[2] if row[2] is not None else ""
-            print(f"{idx}\t{name}\t{desc}")
-        print(f"Показана {page} страница")
+        if cmd == "5":
+            # сначала показать экспонаты
+            coll_ctx, rows = self.show_exhibits_by_collection()
+            # затем меню экспонатов
+            return self.after_show_exhibits(coll_ctx, rows)
 
-        # TODO: Проверить перелистывание страниц
-        self.print_menu(menu)
+        if cmd == "6":
+            self.edit_collection()
+            return "1"
 
-        inp = input("Что дальше?").strip()
-        # я сдался, не смог здесь написать match-case
-        if inp == ">" and page < len(lst):
-            self.show_collections(page + 1)
-        elif inp == "<" and page > 1:
-            self.show_collections(page-1)
-        elif inp in menu.keys():
-            return
-        else:
-            print("Неизвестная команда")
+        # возврат напрямую
+        return cmd
 
-        # menu = """Дальнейшие операции:
-        #     < - пролистнуть влево;
-        #     > - пролистнуть вправо;
-        #     0 - возврат в главное меню;
-        #     3 - добавление новой коллекции;
-        #     4 - удаление коллекции;
-        #     5 - просмотр экспонатов коллекции;
-        #     9 - выход."""
-        # print(menu)
-        return
-    # TODO: Добавить всякие там удаления, добавления, выводы и прочий доп, который в классе таблиц писал
-    def after_show_collections(self, next_step):
+    def after_show_exhibits(self, coll_id=None, rows=None):
+        menu = {
+            "6": "- Добавить экспонат",
+            "7": "- Удалить экспонат",
+            "8": "- Редактировать экспонат",
+            "1": "- Назад к коллекциям",
+            "0": "- Главное меню",
+            "9": "- Выход"
+        }
+
+        for k, v in menu.items():
+            print(f"{k} {v}")
+
+        # Если coll_id уже известен — используем его; иначе предложим выбрать
+        if coll_id is None:
+            coll = self.choose_collection_by_row()
+            if coll is None:
+                return "1"  # вернёмся к просмотру коллекций
+            coll_id = coll[0]
+
+        # Если rows не переданы, загрузим их
+        if rows is None:
+            rows = ExhibitsTable().select_by_col_id(coll_id)
+
         while True:
-            if next_step == "4":
-                print("Пока не реализовано!")
-                return "1"
-            elif next_step == "6" or next_step == "7":
-                print("Пока не реализовано!")
-                next_step = "5"
-            elif next_step == "5":
-                next_step = self.show_exhibits_by_collection()
-            elif next_step != "0" and next_step != "9" and next_step != "3":
-                print("Выбрано неверное число! Повторите ввод!")
-                return "1"
-            else:
-                return next_step
+            cmd = self.read_next_step()
 
-    # TODO: Перепроверить. Статичные?
+            if cmd == "6":
+                # Добавить экспонат в известную коллекцию
+                self.add_exhibit_to_collection(coll_id)
+                # после добавления остаёмся в том же меню (показать заново)
+                return "5"
+
+            if cmd == "7":
+                # Удалить — используем переданные rows (или вновь загружаем)
+                if not rows:
+                    rows = ExhibitsTable().select_by_col_id(coll_id)
+                self.delete_exhibit_from_list(rows)
+                return "5"
+
+            if cmd == "8":
+                if not rows:
+                    rows = ExhibitsTable().select_by_col_id(coll_id)
+                self.edit_exhibit_in_list(rows)
+                return "5"
+
+            if cmd in ("1", "0", "9"):
+                return cmd
+
+            print("Неизвестная команда.")
+
     def add_collection(self):
         print("Добавление коллекции (1 - отмена в любое время)")
         name = input_opt("Введите название: ", nonempty=True)
@@ -212,90 +234,21 @@ class Main:
             return
         CollectionsTable().insert_one([name, desc])
         print("Коллекция успешно добавлена")
-
-        # data = []
-        # data.append(input("Введите имя (1 - отмена): ").strip())
-        # if data[0] == "1":
-        #     return
-        # while len(data[0].strip()) == 0:
-        #     data[0] = input("Имя не может быть пустым! Введите имя заново (1 - отмена):").strip()
-        #     if data[0] == "1":
-        #         return
-        # data.append(input("Введите фамилию (1 - отмена): ").strip())
-        # if data[1] == "1":
-        #     return
-        # while len(data[1].strip()) == 0:
-        #     data[1] = input("Фамилия не может быть пустой! Введите фамилию заново (1 - отмена):").strip()
-        #     if data[1] == "1":
-        #         return
-        # data.append(input("Введите отчество (1 - отмена):").strip())
-        # if data[2] == "1":
-        #     return
-        # CollectionsTable().insert_one(data)
         return
 
     #  Exhibits UI ===================
+    @table_paginator(page_size=5)
     def show_exhibits_by_collection(self):
-        # if self.person_id == -1:    # TODO: Разобраться, зачем все таки был нужен person_id
-        #     while True:
-        #         num = input("Укажите номер строки, в которой записана интересующая Вас персона (0 - отмена):")
-        #         while len(num.strip()) == 0:
-        #             num = input("Пустая строка. Повторите ввод! Укажите номер строки, в которой записана интересующая Вас персона (0 - отмена):")
-        #         if num == "0":
-        #             return "1"
-        #         person = CollectionsTable().find_by_position(int(num))
-        #         if not person:
-        #             print("Введено число, неудовлетворяющее количеству людей!")
-        #         else:
-        #             self.person_id = int(person[1])
-        #             self.person_obj = person
-        #             break
-        # print("Выбран человек: " + self.person_obj[2] + " " + self.person_obj[0] + " " + self.person_obj[3])
-        # print("Телефоны:")
-        # lst = ExhibitsTable().all_by_person_id(self.person_id)
-        # for i in lst:
-        #     print(i[1])
-        #     menu = """Дальнейшие операции:
-        # 0 - возврат в главное меню;
-        # 1 - возврат в просмотр людей;
-        # 6 - добавление нового телефона;
-        # 7 - удаление телефона;
-        # 9 - выход."""
-        #     print(menu)
-        #     return self.read_next_step()
-        #
-        # return self.read_next_step()
-        # TODO: Пролистывание страниц. Может, написать через декоратор?
         coll = self.choose_collection_by_row()
         if coll is None:
-            return
+            return None
         coll_id = coll[0]
-        print(f"Экспонаты коллекции: {coll[1]}")
-        lst = ExhibitsTable().select_by_col_id(coll_id)
-        if not lst:
-            print("Экспонатов нет.")
-            return
-        for idx, row in enumerate(lst, start=1):
-            # assume row structure: (id, name, description, ...)
-            name = row[1] if len(row) > 1 else ""
-            desc = row[2] if len(row) > 2 else ""
-            print(f"{idx}\t{name}\t{desc}")
 
-        menu = """Дальнейшие операции:
-            0 - возврат в главное меню;
-            1 - возврат в просмотр коллекций;
-            6 - добавление нового экспоната;
-            7 - удаление экспоната;
-            8 - редактирование экспоната;
-            9 - выход."""
-        print(menu)
-        cmd = self.read_next_step()
-        if cmd == "6":
-            self.add_exhibit_to_collection(coll_id)
-        elif cmd == "7":
-            self.delete_exhibit_from_list(lst)
-        elif cmd == "8":
-            self.edit_exhibit_in_list(lst)
+        table = ExhibitsTable()
+        rows = table.select_by_col_id(coll_id)
+
+        return table, table.columns(), rows, coll_id
+
 
     def add_exhibit_to_collection(self, coll_id):
         print("Добавление экспоната (1 - отмена)")
@@ -408,7 +361,7 @@ class Main:
     def main_cycle(self):
         current_menu = "0"
         next_step = None    # Не используется, но для чего-то должен быть нужен
-        while(current_menu != "9"):
+        while current_menu != "9":
             if current_menu == "0":
                 self.show_main_menu()
                 next_step = self.read_next_step()
@@ -420,7 +373,7 @@ class Main:
             elif current_menu == "2":
                 self.show_main_menu()
             elif current_menu == "3":
-                self.show_add_person()
+                self.show_add_collection()
                 current_menu = "1"
         print("До свидания!")    
         return

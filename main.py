@@ -3,8 +3,6 @@ sys.path.append('tables')
 
 from project_config import *
 from dbconnection import *
-# from tables.people_table import *
-# from tables.phones_table import *
 from tables.collections_table import *
 from tables.exhibits_table import *
 
@@ -31,7 +29,7 @@ class Main:
 
         # TODO: заполнить нормальными данными.
         #  Не забыть, что надо также проверять валидность данных
-        colt.insert_one(["Test", "Test", "Test"])
+        colt.insert_one(["Природная история Южного Урала", "Экспозиция, посвящённая природному развитию области: геология, флора, фауна и древние эпохи."])
         colt.insert_one(["Test2", "Test2", "Test2"])
         colt.insert_one(["Test3", "Test3", "Test3"])
         ext.insert_one([1, "123"])

@@ -25,20 +25,3 @@ class CollectionsTable(DbTable):
     # TODO: можно попробовать учесть все (, ), AND, OR, BETWEEN, IN, etc
     # Удаление сущностей нужно обоим таблицам, так что пусть определяется в родительском классе
 
-    def update_ents(self, where_clause, set_dict):
-        """
-        where_clause: (col, val) - условие и значение для where
-        set_dict: dict(col:val) - колонки и значения для set,
-        например {"name": "New Name", "description": "New Text"}
-        """
-
-        set_part = ", ".join(f"{col} = %s" for col in set_dict.keys())
-        where_col, where_val = where_clause
-
-        sql = f"UPDATE {self.table_name()} SET {set_part} WHERE {where_col} = %s"
-
-        params = list(set_dict.values()) + [where_val]
-
-        cur = self.dbconn.conn.cursor()
-        cur.execute(sql, params)
-        self.dbconn.conn.commit()

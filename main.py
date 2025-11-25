@@ -391,7 +391,11 @@ class Main:
             elif current_menu == "3":
                 self.show_add_collection()
                 current_menu = "1"
-        print("До свидания!")    
+            elif current_menu == "5":  # <<< ЭТО ДОБАВИТЬ
+                coll_ctx, rows = self.show_exhibits_by_collection()
+                current_menu = self.after_show_exhibits(coll_ctx, rows)
+
+        print("До свидания!")
         return
 
     def test(self):

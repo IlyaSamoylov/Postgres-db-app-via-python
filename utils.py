@@ -158,46 +158,47 @@ def build_readable_columns(table_obj):
 # 	return decorator
 
 # TODO: Вместо номеров пишутся id - нехорошо. Как сопоставить номер строки на экране и id?
+# Новый вариант: перед каждой строкой выводится нормальный порядковый номер,
+# а не id из таблицы.
+
 def table_paginator(page_size=5):
-	"""
-	Декоратор для показа таблицы постранично.
-	Декорируемая функция должна вернуть:
-		(table_obj, columns_dict, rows)  или
-		(table_obj, columns_dict, rows, ctx)
-	- table_obj: экземпляр таблицы (например CollectionsTable())
-	- columns_dict: результат table_obj.columns()
-	- rows: список кортежей (cur.fetchall())
-	- ctx: дополнительный контекст (например coll_id), опционально
-	"""
+
 	def decorator(func):
 		def wrapper(self, *args, **kwargs):
 			res = func(self, *args, **kwargs)
 			if not res:
 				return None, []
 
+			# Распаковка результатов
 			if len(res) == 3:
 				table_obj, columns_dict, rows = res
 				ctx = None
 			elif len(res) == 4:
 				table_obj, columns_dict, rows, ctx = res
 			else:
-				raise ValueError("table_paginator: функция должна возвращать (table, columns, rows) или (table, columns, rows, ctx)")
+				raise ValueError("table_paginator: ожидается (table, columns, rows) или (table, columns, rows, ctx)")
 
 			if not columns_dict or table_obj is None:
 				print("Нет данных (структура таблицы не определена).")
 				return ctx, rows
 
-			col_order = table_obj.column_names()  # порядок колонок
+			# ✔ правильно: берём колонки БЕЗ id
+			col_order = table_obj.column_names_without_id()
 			human_headers = [COLUMN_NAMES_MAP.get(c, c) for c in col_order]
 
 			if not rows:
 				print("Нет данных.")
 				return ctx, rows
 
-			# Вычисляем ширину колонок по заголовкам и содержимому (максимум 50)
+			# ✔ правильно: ищем ИНДЕКСЫ этих колонок внутри row,
+			#   используя полный список column_names()
+			full_cols = table_obj.column_names()
+			row_indexes = [full_cols.index(c) for c in col_order]
+
+			# ✔ вычисляем ширины колонок
 			col_widths = []
-			for c, h in zip(col_order, human_headers):
-				max_content_width = max([len(str(row[table_obj.column_names().index(c)])) for row in rows] + [len(h)])
+			for idx, h in zip(row_indexes, human_headers):
+				max_content_width = max([len(str(row[idx])) for row in rows] + [len(h)])
 				col_widths.append(min(max_content_width, 50))
 
 			total = len(rows)
@@ -208,31 +209,31 @@ def table_paginator(page_size=5):
 				end = start + page_size
 				page_items = rows[start:end]
 
-				# Заголовок страницы
-				print("\n" + "-"*80)
-				print(f"Страница {page} / { (total + page_size - 1)//page_size }")
-				print("-"*80)
+				print("\n" + "-" * 80)
+				print(f"Страница {page} / { (total + page_size - 1) // page_size }")
+				print("-" * 80)
 
-				# Заголовки колонок
-				header_line = " | ".join(f"{h:<{w}}" for h, w in zip(human_headers, col_widths))
+				# Заголовок
+				header_line = f"{'№':<4} | " + " | ".join(
+					f"{h:<{w}}" for h, w in zip(human_headers, col_widths)
+				)
 				print(header_line)
-				print("-"*len(header_line))
+				print("-" * len(header_line))
 
-				# Строки
-				for row in page_items:
-					row_line = []
-					for c, w in zip(col_order, col_widths):
-						idx = table_obj.column_names().index(c)
-						val = row[idx] if idx < len(row) else ""
+				# ✔ печать строк без id
+				for i, row in enumerate(page_items, start=start + 1):
+					row_line = [f"{i:<4}"]  # порядковый номер
+					for idx, w in zip(row_indexes, col_widths):
+						val = row[idx]
 						val_str = str(val) if val is not None else ""
 						if len(val_str) > w:
-							val_str = val_str[:w-3] + "..."
+							val_str = val_str[:w - 3] + "..."
 						row_line.append(f"{val_str:<{w}}")
 					print(" | ".join(row_line))
 
-				# Навигация
-				print("\n< - назад, > - вперёд, 0 - выход (вернуться в меню)")
+				print("\n< - назад, > - вперёд, 0 - выход")
 				cmd = input("=> ").strip()
+
 				if cmd == "<" and page > 1:
 					page -= 1
 				elif cmd == ">" and end < total:
@@ -241,6 +242,6 @@ def table_paginator(page_size=5):
 					return ctx, rows
 				else:
 					print("Неизвестная команда.")
+
 		return wrapper
 	return decorator
-

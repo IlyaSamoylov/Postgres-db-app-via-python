@@ -1,5 +1,8 @@
 # Базовые действия с таблицами
-
+# TODO: Сделано или все таки пока нет:
+#  доработав все проверки целостности данных и соответствия типам данных (не должно при
+#  добавлении, и других действиях происходить ошибок PostgreSQL, приводящих к «вылету» программы
+#  или действиям программы, не имеющим нормальных объяснений).
 from dbconnection import *
 
 class DbTable:
@@ -15,13 +18,17 @@ class DbTable:
         return {"test": ["integer", "PRIMARY KEY"]}
 
     def column_names(self):
-        return sorted(self.columns().keys(), key = lambda x: x)
+        # Снова, зачем?
+        # return sorted(self.columns().keys(), key = lambda x: x)
+        return list(self.columns().keys())
 
     def primary_key(self):
         return ['id']
 
     def column_names_without_id(self):
-        res = sorted(self.columns().keys(), key = lambda x: x)
+        # Зачем была эта сортировка колонок таблицы?!
+        # res = sorted(self.columns().keys(), key = lambda x: x)
+        res = list(self.columns().keys())
         if 'id' in res:
             res.remove('id')
         return res
@@ -30,14 +37,16 @@ class DbTable:
         return []
 
     def create(self):
-        arr = [k + " " + " ".join(v) for k, v in
-               sorted(self.columns().items(), key=lambda x: x[0])]
+        # Зачем сортировка колонок бл*ть?!
+        # arr = [k + " " + " ".join(v) for k, v in
+        #        sorted(self.columns().items(), key=lambda x: x[0])]
+        arr = [k + " " + " ".join(v) for k, v in list(self.columns().items())]
 
         cols = ", ".join(arr + self.table_constraints())
-        # TODO: я не уверен, что параметры self. можно передавать напрямую, потому что они тоже могут задаваться извне через другие функции
-        sql = f"CREATE TABLE {self.table_name()} (%s)"
+
+        sql = f"CREATE TABLE {self.table_name()} ({cols})"
         cur = self.dbconn.conn.cursor()
-        cur.execute(sql, cols)
+        cur.execute(sql)
         self.dbconn.conn.commit()
         return
 
@@ -57,7 +66,6 @@ class DbTable:
 
         cols = ", ".join(self.column_names_without_id())
         placeholders = ", ".join(["%s"] * len(vals))
-
         sql = f"INSERT INTO {self.table_name()} ({cols}) VALUES ({placeholders})"
         cur = self.dbconn.conn.cursor()
         cur.execute(sql, tuple(vals))

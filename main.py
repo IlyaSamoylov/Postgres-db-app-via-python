@@ -13,18 +13,18 @@ class Main:
     config = ProjectConfig()
     connection = DbConnection(config)
 
-    def __init__(self):
+    def __init__(self): # X
         DbTable.dbconn = self.connection
         return
 
-    def db_init(self):
+    def db_init(self): # X
         colt = CollectionsTable()
         ext = ExhibitsTable()
         colt.create()
         ext.create()
         return
 
-    def db_insert_somethings(self):
+    def db_insert_somethings(self): # X
         colt = CollectionsTable()
         ext = ExhibitsTable()
 
@@ -36,14 +36,14 @@ class Main:
         ext.insert_one(["Керамический горшок XIX века", "Глиняный горшок из крестьянского быта Южного Урала.", 5000.00, 19, 2, 2, 30.00, 30.00, 30.00, 'n', 'n', 'y'])
         ext.insert_one(["Плакат индустриализации Урала", "Плакат советского периода, демонстрирующий развитие промышленности.", 12000.00, 20, 3, 3, 80.00, 60.00, 1.00, 'n', 'n', 'y'])
 
-    def db_drop(self):
+    def db_drop(self): # X
         colt = CollectionsTable()
         ext = ExhibitsTable()
-        colt.drop()
         ext.drop()
+        colt.drop()
         return
 
-    def show_main_menu(self):
+    def show_main_menu(self): # X
         menu = """Добро пожаловать! 
 Основное меню (выберите цифру в соответствии с необходимым действием): 
     1 - просмотр коллекций;
@@ -52,10 +52,10 @@ class Main:
         print(menu)
         return
 
-    def read_next_step(self):
+    def read_next_step(self): # X
         return input("=> ").strip()
 
-    def after_main_menu(self, next_step):
+    def after_main_menu(self, next_step): # X
         if next_step == "2":
             self.db_drop()
             self.db_init()
@@ -68,15 +68,26 @@ class Main:
         else:
             return next_step
 
-    def print_menu(self, menu):
+    def print_menu(self, menu): # X
         for k, v in menu.items():
             print(k, v)
 
     # Collections UI ===================
-    @table_paginator(page_size=5)
-    def show_collections(self):
+    @table_paginator(page_size=3)
+    def show_collections(self): # X
         table = CollectionsTable()
         return table, table.columns(), table.all()
+
+    def after_show_collections_menu(self): # X
+        menu = {
+            "3": "Добавить коллекцию",
+            "4": "Удалить коллекцию",
+            "5": "Просмотр экспонатов коллекции",
+            "6": "Редактировать коллекцию",
+            "0": "Возврат в главное меню",
+            "9": "Выход"
+        }
+        self.print_menu(menu)
 
     def after_show_collections(self, cmd):
         menu = {
@@ -87,6 +98,8 @@ class Main:
             "0": "Возврат в главное меню",
             "9": "Выход"
         }
+
+        self.print_menu(menu)
 
         if cmd not in menu:
             print("Неизвестная команда.")
@@ -174,7 +187,9 @@ class Main:
             return
         CollectionsTable().insert_one([name, description])
         print("Коллекция добавлена.")
-
+    # TODO: для всех взаимодействий со стороны пользователя должны приходить нетехнические данные
+    #  типа видимого номера коллекции (не обязательно = id, если были удаления и добавления),
+    #  внутри надо их как-то синхронизировать
     def choose_collection_by_row(self):
         lst = CollectionsTable().all()
         if not lst:
@@ -368,6 +383,7 @@ class Main:
                 current_menu = self.after_main_menu(next_step)
             elif current_menu == "1":
                 self.show_collections()
+                self.after_show_collections_menu()
                 next_step = self.read_next_step()
                 current_menu = self.after_show_collections(next_step)
             elif current_menu == "2":
@@ -384,9 +400,9 @@ class Main:
 m = Main()
 # Откоментируйте эту строку и закоментируйте следующую для теста
 # соединения с БД
-res = m.connection.test()
+# res = m.connection.test()
+# print("Тест соединения прошёл:", res)
 print(f"Подключилось, вроде{"."*10}")
-print("Тест соединения прошёл:", res)
 
-# m.main_cycle()
+m.main_cycle()
     

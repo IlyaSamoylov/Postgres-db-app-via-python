@@ -1,5 +1,7 @@
+# TODO: Спросить, как добавить в проект prettytable, чтобы у преподавателя тоже добавился
 # Валидация
-
+# TODO" Наверное стоит настроить отмены на какие-то значения, которые редко вписсывают,
+#  например None, все равно вместо им можно заполнять, если нажмут enter
 def input_opt(prompt, nonempty=False):
 	"""
 	Проверяет:
@@ -28,14 +30,14 @@ def val_input_num(prompt, onlyint=False):
 	while True:
 		s = input(prompt).strip()
 
-		if s == "1":
+		if s == "0":
 			return None
 		try:
 			v = float(s)
 			if onlyint:
 				v = int(s)
 		except ValueError:
-			print("Невалидное число. Повторите ввод (или 1 для отмены).")
+			print("Невалидное число. Повторите ввод (или 0 для отмены).")
 			continue
 		return v
 
@@ -73,6 +75,89 @@ def build_readable_columns(table_obj):
 	return col_names, readable
 
 
+# def table_paginator(page_size=5):
+# 	"""
+# 	Декоратор для показа таблицы постранично.
+# 	Декорируемая функция должна вернуть:
+# 		(table_obj, columns_dict, rows)  или
+# 		(table_obj, columns_dict, rows, ctx)
+# 	- table_obj: экземпляр таблицы (например CollectionsTable())
+# 	- columns_dict: результат table_obj.columns()
+# 	- rows: список кортежей (cur.fetchall())
+# 	- ctx: дополнительный контекст (например coll_id), опционально
+# 	Декоратор печатает страницы и возвращает (ctx, rows) по завершении просмотра,
+# 	чтобы меню могло использовать уже выбранную коллекцию/строки
+# 	(вместо повторного запроса выбора).
+# 	"""
+# 	def decorator(func):
+# 		def wrapper(self, *args, **kwargs):
+# 			# вызвать функцию-источник данных
+# 			res = func(self, *args, **kwargs)
+# 			# разрешаем, чтобы функция вернула None (например отмена выбора)
+# 			if not res:
+# 				# возвращаем (None, []) — чтобы caller знал, что нет контекста/строк
+# 				return None, []
+#
+# 			# Поддерживаем два формата возврата: 3 или 4 элементов
+# 			if len(res) == 3:
+# 				table_obj, columns_dict, rows = res
+# 				ctx = None
+# 			elif len(res) == 4:
+# 				table_obj, columns_dict, rows, ctx = res
+# 			else:
+# 				raise ValueError("table_paginator: функция должна возвращать (table, columns, rows) или (table, columns, rows, ctx)")
+#
+# 			# Если колонок нет или table_obj не передан — пустой результат
+# 			if not columns_dict or table_obj is None:
+# 				print("Нет данных (структура таблицы не определена).")
+# 				return ctx, rows
+#
+# 			col_order = table_obj.column_names()  # порядок колонок соответствует column_names()
+# 			human_headers = [COLUMN_NAMES_MAP.get(c, c) for c in col_order]
+#
+# 			# Если строк нет — даём возможность меню работать (возвращаем ctx,rows)
+# 			if not rows:
+# 				print("Нет данных.")
+# 				return ctx, rows
+#
+# 			total = len(rows)
+# 			page = 1
+# 			while True:
+# 				start = (page - 1) * page_size
+# 				end = start + page_size
+# 				page_items = rows[start:end]
+#
+# 				print("\n" + "-"*60)
+# 				print(f"Страница {page} / { (total + page_size - 1)//page_size }")
+# 				print("-"*60)
+# 				# заголовки
+# 				print("\t".join(human_headers))
+# 				# строки
+# 				for i, row in enumerate(page_items, start=1):
+# 					# строим строку в порядке col_order, используя column_names() индексы
+# 					values = []
+# 					for c in col_order:
+# 						idx = table_obj.column_names().index(c)
+# 						val = row[idx] if idx < len(row) else ""
+# 						values.append(str(val) if val is not None else "")
+# 					print("\t".join(values))
+#
+# 				# навигация
+# 				print("\n< - назад, > - вперёд, 0 - выход (вернуться в меню)")
+# 				cmd = input("=> ").strip()
+# 				if cmd == "<" and page > 1:
+# 					page -= 1
+# 				elif cmd == ">" and end < total:
+# 					page += 1
+# 				elif cmd == "0":
+# 					# возвращаем контекст и текущие rows для after_*
+# 					return ctx, rows
+# 				else:
+# 					print("Неизвестная команда.")
+# 		return wrapper
+# 	return decorator
+
+# TODO: Вместо номеров пишутся id - нехорошо. Как сопоставить номер строки на экране и id?
 def table_paginator(page_size=5):
 	"""
 	Декоратор для показа таблицы постранично.
@@ -83,20 +168,13 @@ def table_paginator(page_size=5):
 	- columns_dict: результат table_obj.columns()
 	- rows: список кортежей (cur.fetchall())
 	- ctx: дополнительный контекст (например coll_id), опционально
-	Декоратор печатает страницы и возвращает (ctx, rows) по завершении просмотра,
-	чтобы меню могло использовать уже выбранную коллекцию/строки
-	(вместо повторного запроса выбора).
 	"""
 	def decorator(func):
 		def wrapper(self, *args, **kwargs):
-			# вызвать функцию-источник данных
 			res = func(self, *args, **kwargs)
-			# разрешаем, чтобы функция вернула None (например отмена выбора)
 			if not res:
-				# возвращаем (None, []) — чтобы caller знал, что нет контекста/строк
 				return None, []
 
-			# Поддерживаем два формата возврата: 3 или 4 элементов
 			if len(res) == 3:
 				table_obj, columns_dict, rows = res
 				ctx = None
@@ -105,42 +183,54 @@ def table_paginator(page_size=5):
 			else:
 				raise ValueError("table_paginator: функция должна возвращать (table, columns, rows) или (table, columns, rows, ctx)")
 
-			# Если колонок нет или table_obj не передан — пустой результат
 			if not columns_dict or table_obj is None:
 				print("Нет данных (структура таблицы не определена).")
 				return ctx, rows
 
-			col_order = table_obj.column_names()  # порядок колонок соответствует column_names()
+			col_order = table_obj.column_names()  # порядок колонок
 			human_headers = [COLUMN_NAMES_MAP.get(c, c) for c in col_order]
 
-			# Если строк нет — даём возможность меню работать (возвращаем ctx,rows)
 			if not rows:
 				print("Нет данных.")
 				return ctx, rows
 
+			# Вычисляем ширину колонок по заголовкам и содержимому (максимум 50)
+			col_widths = []
+			for c, h in zip(col_order, human_headers):
+				max_content_width = max([len(str(row[table_obj.column_names().index(c)])) for row in rows] + [len(h)])
+				col_widths.append(min(max_content_width, 50))
+
 			total = len(rows)
 			page = 1
+
 			while True:
 				start = (page - 1) * page_size
 				end = start + page_size
 				page_items = rows[start:end]
 
-				print("\n" + "-"*60)
+				# Заголовок страницы
+				print("\n" + "-"*80)
 				print(f"Страница {page} / { (total + page_size - 1)//page_size }")
-				print("-"*60)
-				# заголовки
-				print("\t".join(human_headers))
-				# строки
-				for i, row in enumerate(page_items, start=1):
-					# строим строку в порядке col_order, используя column_names() индексы
-					values = []
-					for c in col_order:
+				print("-"*80)
+
+				# Заголовки колонок
+				header_line = " | ".join(f"{h:<{w}}" for h, w in zip(human_headers, col_widths))
+				print(header_line)
+				print("-"*len(header_line))
+
+				# Строки
+				for row in page_items:
+					row_line = []
+					for c, w in zip(col_order, col_widths):
 						idx = table_obj.column_names().index(c)
 						val = row[idx] if idx < len(row) else ""
-						values.append(str(val) if val is not None else "")
-					print("\t".join(values))
+						val_str = str(val) if val is not None else ""
+						if len(val_str) > w:
+							val_str = val_str[:w-3] + "..."
+						row_line.append(f"{val_str:<{w}}")
+					print(" | ".join(row_line))
 
-				# навигация
+				# Навигация
 				print("\n< - назад, > - вперёд, 0 - выход (вернуться в меню)")
 				cmd = input("=> ").strip()
 				if cmd == "<" and page > 1:
@@ -148,11 +238,9 @@ def table_paginator(page_size=5):
 				elif cmd == ">" and end < total:
 					page += 1
 				elif cmd == "0":
-					# возвращаем контекст и текущие rows для after_*
 					return ctx, rows
 				else:
 					print("Неизвестная команда.")
 		return wrapper
 	return decorator
-
 

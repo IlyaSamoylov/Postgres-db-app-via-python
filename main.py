@@ -252,8 +252,8 @@ class Main:
             print("Список коллекций пуст.")
             return None
         while True:
-            num = input_num("Укажите номер строки коллекции (0 - отмена): ", onlyint=True)
-            if num == 0:
+            num = input_num("Укажите номер строки коллекции (q - отмена): ", onlyint=True)
+            if num == "q":
                 return None
             if num is None or num < 1 or num > len(lst):
                 print("Неверный номер. Повторите ввод.")
@@ -285,9 +285,11 @@ class Main:
         colmap = {"name": row[1], "description": row[2]}
 
         for col, old in colmap.items():
-            raw = input_text(f"{col} [{old}] (ENTER = NULL): ")
+            raw = input_text(f"{col} [{old}] (Null = NULL, / - оставить старое значение): ")
             if raw == "quit":
                 return
+            if raw == "/old":
+                continue  # для старого значения просто не включать в запрос
             data[col] = raw  # None = NULL, строка = новое
 
         CollectionsTable().update_ents(("id", row[0]), data)
@@ -295,11 +297,11 @@ class Main:
 
     def show_add_collection(self):
         # Не реализована проверка на максимальную длину строк. Нужно доделать самостоятельно!
-        name = input_text("Введите название коллекции (1 - отмена): ")
+        name = input_text("Введите название коллекции (q - отмена): ")
         if name is None:
             return
 
-        desc = input_text("Введите описание (ENTER для пустого, 1 - отмена): ")
+        desc = input_text("Введите описание (Null - NULL, q - отмена): ")
         if desc is None:
             return
         CollectionsTable().insert_one({"name":name, "description":desc})
@@ -320,12 +322,12 @@ class Main:
         return table, table.columns(), rows, coll_id
 
     def add_exhibit_to_collection(self, coll_id):
-        print("Добавление экспоната (q — отмена, ENTER = default)")
+        print("Добавление экспоната (q — отмена, Null = NULL, enter = default)")
 
         name = input_text("Название: ")
         if name == "quit": return
 
-        description = input_text("Описание (enter = default): ")
+        description = input_text("Описание: ")
         if description == "quit": return
 
         insurance_value = input_num("Страховая стоимость (enter = 0): ")
@@ -400,7 +402,7 @@ class Main:
             return
 
         while True:
-            num = input_num("Номер строки экспоната для удаления (0 - отмена): ",
+            num = input_num("Номер строки экспоната для удаления (q - отмена): ",
                             onlyint=True)
             if num == 0 or num == "quit":
                 return
@@ -476,9 +478,11 @@ class Main:
 
         data = {}
         for col, oldv in old.items():
-            raw = input_text(f"{col} [{oldv}] (ENTER = NULL): ")
+            raw = input_text(f"{col} [{oldv}] (Null = NULL, / = оставить): ")
             if raw == "quit":
                 return
+            if raw == "/old":
+                continue
             data[col] = raw
 
         ExhibitsTable().update_ents(("id", ex_id), data)

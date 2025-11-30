@@ -29,6 +29,7 @@ def input_text(prompt: str):
 		None     → NULL
 		""       → пропуск (skip) в update
 		строку   → текст
+		"/"      -> оставить старое значение (для update)
 	"""
 	s = input(prompt).strip()
 
@@ -36,8 +37,10 @@ def input_text(prompt: str):
 		return "quit"
 	if s.lower() == "null":
 		return None  # NULL
-	if s.lower() in ("default", ""):
+	if s.lower().strip() in ("default", ""):
 		return "DEFAULT"  # DEFAULT keyword
+	if s == "/":
+		return "/old"
 	return s  # значение или ""
 
 #
@@ -69,6 +72,8 @@ def input_num(prompt, onlyint=False):
 			return raw
 		if raw == "":
 			return "DEFAULT"
+		if raw == "/":
+			return "/old"
 
 		try:
 			return int(raw) if onlyint else float(raw)
@@ -114,6 +119,8 @@ def input_yn(prompt, default="y"):
 
 		if raw in ("y", "n"):
 			return raw
+		if raw == "/":
+			return "/old"
 
 		print("Введите y/n, 'null', 'default' или 'q'.")
 

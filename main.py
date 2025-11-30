@@ -325,7 +325,7 @@ class Main:
         name = input_text("Название: ")
         if name == "quit": return
 
-        description = input_text("Описание (enter = 0): ")
+        description = input_text("Описание (enter = default): ")
         if description == "quit": return
 
         insurance_value = input_num("Страховая стоимость (enter = 0): ")
@@ -373,26 +373,83 @@ class Main:
         ExhibitsTable().insert_one(data)
         print("Экспонат добавлен.")
 
+    # def delete_exhibit_from_list(self, lst):
+    #     if not lst:
+    #         print("Нет экспонатов для удаления.")
+    #         return
+    #     while True:
+    #         num = input_num("Номер строки экспоната для удаления (0 - отмена): ", onlyint=True )
+    #         if num == "0":
+    #             return
+    #         if num is None or num < 1 or num > len(lst):
+    #             print("Неверный номер.")
+    #             continue
+    #         row = lst[int(num) - 1]
+    #         ex_id = row[0]
+    #         ok = input(f"Подтвердите удаление '{row[1]}' (y/N): ").strip().lower()
+    #         if ok != "y":
+    #             print("Отмена")
+    #             return
+    #         ExhibitsTable().del_entities(("id", ex_id))
+    #         print("Экспонат удалён.")
+    #         return
+
     def delete_exhibit_from_list(self, lst):
         if not lst:
             print("Нет экспонатов для удаления.")
             return
+
         while True:
-            num = input_num("Номер строки экспоната для удаления (0 - отмена): ", onlyint=True )
-            if num == "0":
+            num = input_num("Номер строки экспоната для удаления (0 - отмена): ",
+                            onlyint=True)
+            if num == 0 or num == "quit":
                 return
-            if num is None or num < 1 or num > len(lst):
+
+            if num < 1 or num > len(lst):
                 print("Неверный номер.")
                 continue
-            row = lst[int(num) - 1]
+
+            row = lst[num - 1]  # ← БЕРЁМ ИЗ ТЕКУЩЕГО СПИСКА
             ex_id = row[0]
+
             ok = input(f"Подтвердите удаление '{row[1]}' (y/N): ").strip().lower()
             if ok != "y":
                 print("Отмена")
                 return
+
             ExhibitsTable().del_entities(("id", ex_id))
             print("Экспонат удалён.")
             return
+
+    # def edit_exhibit_in_list(self, lst):
+    #     if not lst:
+    #         print("Нет экспонатов.")
+    #         return
+    #
+    #     pos = input_num("Номер строки (q — отмена): ", onlyint=True)
+    #     if pos == "quit": return
+    #
+    #     rec = ExhibitsTable().find_by_position(int(pos))
+    #     if rec is None:
+    #         print("Неверный номер.")
+    #         return
+    #
+    #     ex_id = rec[0]
+    #     print(f"Редактирование экспоната: {rec[1]}")
+    #
+    #     old = {
+    #         "name": rec[1],
+    #         "description": rec[2],
+    #     }
+    #
+    #     data = {}
+    #     for col, oldv in old.items():
+    #         raw = input_text(f"{col} [{oldv}] (ENTER = NULL): ")
+    #         if raw == "quit": return
+    #         data[col] = raw
+    #
+    #     ExhibitsTable().update_ents(ex_id, data)
+    #     print("Экспонат обновлён.")
 
     def edit_exhibit_in_list(self, lst):
         if not lst:
@@ -400,14 +457,16 @@ class Main:
             return
 
         pos = input_num("Номер строки (q — отмена): ", onlyint=True)
-        if pos == "quit": return
+        if pos == "quit" or pos == 0:
+            return
 
-        rec = ExhibitsTable().find_by_position(int(pos))
-        if rec is None:
+        if pos < 1 or pos > len(lst):
             print("Неверный номер.")
             return
 
+        rec = lst[pos - 1]  # ← БЕРЁМ ИЗ СПИСКА КОЛЛЕКЦИИ
         ex_id = rec[0]
+
         print(f"Редактирование экспоната: {rec[1]}")
 
         old = {
@@ -418,10 +477,11 @@ class Main:
         data = {}
         for col, oldv in old.items():
             raw = input_text(f"{col} [{oldv}] (ENTER = NULL): ")
-            if raw == "quit": return
+            if raw == "quit":
+                return
             data[col] = raw
 
-        ExhibitsTable().update_ents(ex_id, data)
+        ExhibitsTable().update_ents(("id", ex_id), data)
         print("Экспонат обновлён.")
 
     # MAIN cycle

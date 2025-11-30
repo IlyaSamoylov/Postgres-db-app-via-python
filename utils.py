@@ -36,7 +36,7 @@ def input_text(prompt: str):
 		return "quit"
 	if s.lower() == "null":
 		return None  # NULL
-	if s.lower() == "default" or "":
+	if s.lower() in ("default", ""):
 		return "DEFAULT"  # DEFAULT keyword
 	return s  # значение или ""
 

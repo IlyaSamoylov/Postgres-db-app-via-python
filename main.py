@@ -228,7 +228,7 @@ class Main:
             print("Неизвестная команда.")
 
     def add_collection(self):
-        print("Добавление коллекции (q — отмена, ENTER = NULL)")
+        print("Добавление коллекции (q — отмена, Null = NULL)")
 
         name = input_text("Название: ")
         if name == "quit":
@@ -276,12 +276,13 @@ class Main:
 
     def edit_collection(self):
         row = self.choose_collection_by_row()
+        print(row)
         if not row:
             print("Не найдено.")
             return
 
         data = {}
-        colmap = {"name": row["name"], "description": row["description"]}
+        colmap = {"name": row[1], "description": row[2]}
 
         for col, old in colmap.items():
             raw = input_text(f"{col} [{old}] (ENTER = NULL): ")
@@ -289,7 +290,7 @@ class Main:
                 return
             data[col] = raw  # None = NULL, строка = новое
 
-        CollectionsTable().update_ents(row["id"], data)
+        CollectionsTable().update_ents(("id", row[0]), data)
         print("Запись обновлена.")
 
     def show_add_collection(self):

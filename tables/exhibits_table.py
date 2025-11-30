@@ -27,6 +27,12 @@ class ExhibitsTable(DbTable):
 										  "DEFAULT 'y'"],
 		}
 
+	def not_null_cols(self):
+		return ["name", "collection_id", "need_temp_control", "need_humidity_control", "protected_from_people"]
+
+	def default_cols(self):
+		return ["insurance_value", "collection_id", "need_temp_control", "need_humidity_control", "protected_from_people"]
+
 	def table_constraints(self):
 		return [
 			"FOREIGN KEY (collection_id) REFERENCES " +
@@ -77,19 +83,104 @@ class ExhibitsTable(DbTable):
 		# Используем insert_one (который уже безопасный)
 		self.insert_one(vals)
 
+	def validate(self, data: dict):
+		MAX_NAME = 50
+		MAX_DESC = 5000
 
-	# TODO: Большой такой тудуууууууу
-	# ВАЛИДАЦИЯ
-	# ВЕК:
-	#             if v > 21 or v < 0:
-	#                 print("Век должен быть в диапазоне 0..21.")
-	#                 continue
+		errors = []
 
-	#             if v < 0 or (not allow_zero and v == 0):
-	#                 print("Значение должно быть положительным.")
-	#                 continue
+		not_null = set(self.not_null_cols())
+		defaults = set(self.default_cols())
 
-	# Не забудь проверить числа и на неотрицательность тоже
-	# Проверка на максимальную длинну строк
-	# Не забудь, что удаление должло быть каскадное каскадное
+		for col, val in data.items():
+
+			# DEFAULT допустим только для колонок с DEFAULT
+			if val == "DEFAULT":
+				if col not in defaults:
+					errors.append(
+						f"{col}: значение DEFAULT недоступно (нет DEFAULT в таблице).")
+				continue
+
+			# NULL
+			if val is None:
+				if col in not_null:
+					errors.append(f"{col} не может быть NULL.")
+				continue
+
+			# --- name ---
+			if col == "name":
+				if not isinstance(val, str):
+					errors.append("name должно быть строкой.")
+				else:
+					if not val.strip():
+						errors.append("Имя экспоната не может быть пустым.")
+					if len(val) > MAX_NAME:
+						errors.append(f"Слишком длинное имя (> {MAX_NAME}).")
+
+			# --- description ---
+			elif col == "description":
+				if not isinstance(val, str):
+					errors.append("description должно быть строкой.")
+				else:
+					if len(val) > MAX_DESC:
+						errors.append(f"Описание слишком длинное (> {MAX_DESC}).")
+
+			# --- insurance_value ---
+			elif col == "insurance_value":
+				if not isinstance(val, (int, float)):
+					errors.append("insurance_value должно быть числом.")
+				elif val < 0:
+					errors.append("insurance_value должно быть >= 0.")
+				else:
+					s = str(val)
+					if "." in s:
+						intp, frac = s.split(".")
+						if len(frac) > 2:
+							errors.append(
+								"Страховая стоимость: максимум 2 знака после точки.")
+					if len(s.replace(".", "")) > 12:
+						errors.append("Слишком много цифр в insurance_value.")
+
+			# --- century ---
+			elif col == "century":
+				if not isinstance(val, int):
+					errors.append("century должен быть целым.")
+				elif not (-32768 <= val <= 21):
+					errors.append("century должен быть в диапазоне -32768..21.")
+
+			# --- col_id ---
+			elif col == "collection_id":
+				if not isinstance(val, int):
+					errors.append("collection_id должен быть целым.")
+				elif not (0 < val):
+					errors.append("collection_id не может быть меньше 0")
+
+			# --- dimensions (height/width/length) ---
+			elif col in ("height", "width", "length"):
+				if not isinstance(val, (int, float)):
+					errors.append(f"{col} должно быть числом.")
+				elif val <= 0:
+					errors.append(f"{col} должно быть > 0.")
+
+			# --- hall_id ---
+			elif col == "hall_id":
+				if not isinstance(val, int):
+					errors.append("hall_id должно быть целым числом.")
+				elif val <= 0:
+					errors.append("hall_id должно быть > 0.")
+
+			# --- flags ---
+			elif col in ("need_temp_control", "need_humidity_control",
+			             "protected_from_people"):
+				if val not in ("y", "n"):
+					errors.append(f"{col} должно быть 'y' или 'n'.")
+
+			# неизвестная колонка
+			else:
+				errors.append(f"Неизвестная колонка: {col}")
+
+		for e in errors:
+			print(" -", e)
+		return errors
+
 

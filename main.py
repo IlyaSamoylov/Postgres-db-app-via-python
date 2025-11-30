@@ -29,12 +29,62 @@ class Main:
         ext = ExhibitsTable()
 
         #  Не забыть, что надо также проверять валидность данных
-        colt.insert_one(["Челябинский метеорит и космо‑наследие", "Коллекция, посвящённая знаменитому челябинскому метеориту — его фрагменты, история падения и исследования."])
-        colt.insert_one(["История быта и культуры Южного Урала", "Экспозиция, отражающая народный быт, этнографию и культуру населения края."])
-        colt.insert_one(["XX век: индустриализация и война", "Коллекция, посвящённая истории Урала в XX веке: промышленность, война, советский период."])
-        ext.insert_one(["Фрагмент метеорита Чебаркуль", "Кусок метеорита, найденного в Челябинской области после падения в озеро Чебаркуль.", 1000000.00, 21, 1, 5, 50.00, 40.00, 25.00, 'n', 'n', 'y'])
-        ext.insert_one(["Керамический горшок XIX века", "Глиняный горшок из крестьянского быта Южного Урала.", 5000.00, 19, 2, 2, 30.00, 30.00, 30.00, 'n', 'n', 'y'])
-        ext.insert_one(["Плакат индустриализации Урала", "Плакат советского периода, демонстрирующий развитие промышленности.", 12000.00, 20, 3, 3, 80.00, 60.00, 1.00, 'n', 'n', 'y'])
+        colt.insert_one({
+            "name": "Челябинский метеорит и космо-наследие",
+            "description": "Коллекция, посвящённая знаменитому челябинскому метеориту — его фрагменты, история падения и исследования."
+        })
+
+        colt.insert_one({
+            "name": "История быта и культуры Южного Урала",
+            "description": "Экспозиция, отражающая народный быт, этнографию и культуру населения края."
+        })
+
+        colt.insert_one({
+            "name": "XX век: индустриализация и война",
+            "description": "Коллекция, посвящённая истории Урала в XX веке: промышленность, война, советский период."
+        })
+        ext.insert_one({
+            "name": "Фрагмент метеорита Чебаркуль",
+            "description": "Кусок метеорита, найденного в Челябинской области после падения в озеро Чебаркуль.",
+            "insurance_value": 1000000.00,
+            "century": 21,
+            "collection_id": 1,
+            "hall_id": 5,
+            "height": 50.00,
+            "width": 40.00,
+            "length": 25.00,
+            "need_temp_control": "n",
+            "need_humidity_control": "n",
+            "protected_from_people": "y"
+        })
+        ext.insert_one({
+            "name": "Керамический горшок XIX века",
+            "description": "Глиняный горшок из крестьянского быта Южного Урала.",
+            "insurance_value": 5000.00,
+            "century": 19,
+            "collection_id": 2,
+            "hall_id": 2,
+            "height": 30.00,
+            "width": 30.00,
+            "length": 30.00,
+            "need_temp_control": "n",
+            "need_humidity_control": "n",
+            "protected_from_people": "y"
+        })
+        ext.insert_one({
+            "name": "Плакат индустриализации Урала",
+            "description": "Плакат советского периода, демонстрирующий развитие промышленности.",
+            "insurance_value": 12000.00,
+            "century": 20,
+            "collection_id": 3,
+            "hall_id": 3,
+            "height": 80.00,
+            "width": 60.00,
+            "length": 1.00,
+            "need_temp_control": "n",
+            "need_humidity_control": "n",
+            "protected_from_people": "y"
+        })
 
     def db_drop(self): # X
         colt = CollectionsTable()
@@ -178,25 +228,31 @@ class Main:
             print("Неизвестная команда.")
 
     def add_collection(self):
-        print("Добавление коллекции (1 - отмена в любое время)")
-        name = input_opt("Введите название: ", nonempty=True)
-        if name is None:
+        print("Добавление коллекции (q — отмена, ENTER = NULL)")
+
+        name = input_text("Название: ")
+        if name == "quit":
             return
-        description = input_opt("Введите описание (ENTER для пустого, 1 - отмена): ")
-        if description is None:
+
+        description = input_text("Описание: ")
+        if description == "quit":
             return
-        CollectionsTable().insert_one([name, description])
-        print("Коллекция добавлена.")
-    # TODO: для всех взаимодействий со стороны пользователя должны приходить нетехнические данные
-    #  типа видимого номера коллекции (не обязательно = id, если были удаления и добавления),
-    #  внутри надо их как-то синхронизировать
+
+        data = {
+            "name": name,
+            "description": description,
+        }
+
+        CollectionsTable().insert_one(data)
+        # print("Коллекция добавлена.")
+
     def choose_collection_by_row(self):
         lst = CollectionsTable().all()
         if not lst:
             print("Список коллекций пуст.")
             return None
         while True:
-            num = val_input_num("Укажите номер строки коллекции (0 - отмена): ", onlyint=True)
+            num = input_num("Укажите номер строки коллекции (0 - отмена): ", onlyint=True)
             if num == 0:
                 return None
             if num is None or num < 1 or num > len(lst):
@@ -219,35 +275,33 @@ class Main:
         print("Коллекция удалена (и её экспонаты, если были).")
 
     def edit_collection(self):
-        coll = self.choose_collection_by_row()
-        if coll is None:
+        row = self.choose_collection_by_row()
+        if not row:
+            print("Не найдено.")
             return
-        coll_id = coll[0]
-        print(f"Редактирование коллекции: {coll[1]}")
-        new_name = input_opt(f"Новое название (ENTER оставить '{coll[1]}', 1 - отмена): ", nonempty=True)
-        if new_name is None:
-            return
-        if new_name == "":
-            new_name = coll[1]
-        new_desc = input_opt("Новое описание (ENTER оставить текущим, 1 - отмена): ")
-        if new_desc is None:
-            return
-        if new_desc == "":
-            new_desc = coll[2]
-        CollectionsTable().update_ents(("id", coll_id),
-                                       {"name": new_name, "description": new_desc})
-        print("Коллекция обновлена.")
+
+        data = {}
+        colmap = {"name": row["name"], "description": row["description"]}
+
+        for col, old in colmap.items():
+            raw = input_text(f"{col} [{old}] (ENTER = NULL): ")
+            if raw == "quit":
+                return
+            data[col] = raw  # None = NULL, строка = новое
+
+        CollectionsTable().update_ents(row["id"], data)
+        print("Запись обновлена.")
 
     def show_add_collection(self):
         # Не реализована проверка на максимальную длину строк. Нужно доделать самостоятельно!
-        name = input_opt("Введите название коллекции (1 - отмена): ", True)
+        name = input_text("Введите название коллекции (1 - отмена): ")
         if name is None:
             return
 
-        desc = input_opt("Введите описание (ENTER для пустого, 1 - отмена): ")
+        desc = input_text("Введите описание (ENTER для пустого, 1 - отмена): ")
         if desc is None:
             return
-        CollectionsTable().insert_one([name, desc])
+        CollectionsTable().insert_one({"name":name, "description":desc})
         print("Коллекция успешно добавлена")
         return
 
@@ -264,44 +318,43 @@ class Main:
 
         return table, table.columns(), rows, coll_id
 
-
     def add_exhibit_to_collection(self, coll_id):
-        print("Добавление экспоната (1 - отмена)")
-        name = input_opt("Название: ", nonempty=True)
-        if name is None:
-            return
-        description = input_opt("Описание (ENTER для пустого): ")
-        if description is None:
-            return
-        insurance_value = val_input_num("Страховая стоимость (число): ")
-        if insurance_value is None:
-            return
-        century = val_input_num("Век (0..21): ", onlyint=True)
-        if century is None:
-            return
-        hall_id = None
-        hall_input = val_input_num("Номер зала (целое, ENTER пусто): ", onlyint=True)
-        if hall_input is not None and hall_input != "":
-            try:
-                hall_id = int(hall_input)
-            except ValueError:
-                print("Значение зала должно быть целым. Отмена")
-                return
-        height = val_input_num("Высота (см, >0): ")
-        # TODO: Наверное, лучше все так вернуть allow_zero
-        if height is None or height <= 0:
-            return
-        width = val_input_num("Ширина (см, >0): ")
-        if width is None or width < 0:
-            return
-        length = val_input_num("Длина (см, >0): ")
-        if length is None:
-            return
-        need_temp = input_char_yn("Требуется контроль температуры?", default="y")
-        need_hum = input_char_yn("Требуется контроль влажности?", default="y")
-        protected = input_char_yn("Защищено ли от людей?", default="y")
+        print("Добавление экспоната (q — отмена, ENTER = default)")
 
-        values = {
+        name = input_text("Название: ")
+        if name == "quit": return
+
+        description = input_text("Описание (enter = 0): ")
+        if description == "quit": return
+
+        insurance_value = input_num("Страховая стоимость (enter = 0): ")
+        if insurance_value == "quit": return
+
+        century = input_num("Век (<21): ", onlyint=True)
+        if century == "quit": return
+
+        hall_id = input_num("Номер зала: ", onlyint=True)
+        if hall_id == "quit": return
+
+        height = input_num("Высота (>0): ")
+        if height == "quit": return
+
+        width = input_num("Ширина (>0): ")
+        if width == "quit": return
+
+        length = input_num("Длина (>0): ")
+        if length == "quit": return
+
+        need_temp = input_yn("Требуется контроль температуры (enter = y) y/N?")
+        if need_temp == "quit": return
+
+        need_hum = input_yn("Требуется контроль влажности (enter = y) y/N?")
+        if need_hum == "quit": return
+
+        protected = input_yn("Защита от людей (enter = y) y/N?")
+        if protected == "quit": return
+
+        data = {
             "name": name,
             "description": description,
             "insurance_value": insurance_value,
@@ -313,10 +366,10 @@ class Main:
             "length": length,
             "need_temp_control": need_temp,
             "need_humidity_control": need_hum,
-            "protected_from_people": protected,
+            "protected_from_people": protected
         }
 
-        ExhibitsTable().add_by_col_id(coll_id, values)
+        ExhibitsTable().insert_one(data)
         print("Экспонат добавлен.")
 
     def delete_exhibit_from_list(self, lst):
@@ -324,7 +377,7 @@ class Main:
             print("Нет экспонатов для удаления.")
             return
         while True:
-            num = val_input_num("Номер строки экспоната для удаления (0 - отмена): ", onlyint=True )
+            num = input_num("Номер строки экспоната для удаления (0 - отмена): ", onlyint=True )
             if num == "0":
                 return
             if num is None or num < 1 or num > len(lst):
@@ -342,35 +395,33 @@ class Main:
 
     def edit_exhibit_in_list(self, lst):
         if not lst:
-            print("Нет экспонатов для редактирования.")
+            print("Нет экспонатов.")
             return
-        while True:
-            num = val_input_num(
-                "Номер строки экспоната для редактирования (0 - отмена): ", onlyint=True)
-            if num == "0":
-                return
-            if num is None or num < 1 or num > len(lst):
-                print("Неверный номер.")
-                continue
-            row = lst[int(num) - 1]
-            ex_id = row[0]
-            print(f"Редактирование экспоната: {row[1]}")
-            new_name = input_opt(
-                f"Новое название (ENTER оставить '{row[1]}', 1 - отмена): ", nonempty=True)
-            if new_name is None:
-                return
-            if new_name == "":
-                new_name = row[1]
-            new_desc = input_opt("Новое описание (ENTER оставить текущим): ")
-            if new_desc is None:
-                return
-            if new_desc == "":
-                new_desc = row[2]
-            # Для краткости редактируем только name и description; остальные поля можно добавить по аналогии
-            ExhibitsTable().update_ents(("id", ex_id),
-                                        {"name": new_name, "description": new_desc})
-            print("Экспонат обновлён.")
+
+        pos = input_num("Номер строки (q — отмена): ", onlyint=True)
+        if pos == "quit": return
+
+        rec = ExhibitsTable().find_by_position(int(pos))
+        if rec is None:
+            print("Неверный номер.")
             return
+
+        ex_id = rec[0]
+        print(f"Редактирование экспоната: {rec[1]}")
+
+        old = {
+            "name": rec[1],
+            "description": rec[2],
+        }
+
+        data = {}
+        for col, oldv in old.items():
+            raw = input_text(f"{col} [{oldv}] (ENTER = NULL): ")
+            if raw == "quit": return
+            data[col] = raw
+
+        ExhibitsTable().update_ents(ex_id, data)
+        print("Экспонат обновлён.")
 
     # MAIN cycle
     def main_cycle(self):

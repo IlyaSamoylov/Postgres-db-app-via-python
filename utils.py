@@ -34,10 +34,12 @@ def input_text(prompt: str):
 
 	if s == "q":
 		return "quit"
-	if s.lower().strip() in ("default", ""):
-		return "DEFAULT"  # DEFAULT keyword
-	if s == "/":
-		return "/old"
+	# if s.lower().strip() in ("default", ""):
+	# 	return "DEFAULT"  # DEFAULT keyword
+	if s == '':
+		return ''
+	# if s == "/":
+	# 	return "/old"
 	return s  # значение или ""
 
 #
@@ -65,17 +67,22 @@ def input_num(prompt, onlyint=False):
 	while True:
 		raw = input_text(prompt)
 
-		if raw in ("quit", None, "DEFAULT"):
-			return raw
+		if raw == "quit":
+			return "quit"
 		if raw == "":
-			return "DEFAULT"
-		if raw == "/":
-			return "/old"
+			return ""
+
+		# if raw in ("quit", None, "DEFAULT"):
+		# 	return raw
+		# if raw == "":
+		# 	return "DEFAULT"
+		# if raw == "/":
+		# 	return "/old"
 
 		try:
 			return int(raw) if onlyint else float(raw)
 		except:
-			print("Введите число, 'null', 'default' или 'q'.")
+			print("Введите число или 'q'.")
 
 
 
@@ -109,17 +116,13 @@ def input_yn(prompt, default="y"):
 	while True:
 		raw = input_text(prompt)
 
-		if raw in ("quit", None, "DEFAULT"):
-			return raw
 		if raw == "":
-			return default
+			return ''
 
 		if raw in ("y", "n"):
 			return raw
-		if raw == "/":
-			return "/old"
 
-		print("Введите y/n, 'null', 'default' или 'q'.")
+		print("Введите y/n или 'q'.")
 
 
 COLUMN_NAMES_MAP = {

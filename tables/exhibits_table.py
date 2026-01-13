@@ -50,7 +50,7 @@ class ExhibitsTable(DbTable):
 
 	def all_by_collection_id(self, col_id):
 		sql = "SELECT * FROM " + self.table_name()
-		sql += " WHERE collection_id = %s"
+		sql += " WHERE collection_id = %s "
 		sql += "ORDER BY "
 		sql += ", ".join(self.primary_key())
 		cur = self.dbconn.conn.cursor()

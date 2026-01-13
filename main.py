@@ -237,7 +237,7 @@ class Main:
             print("Отмена")
             return
 
-        description = input("Описание: ").strip()
+        description = input("Описание (Enter = \"\"): ").strip()
         if description == "q":
             print("Отмена")
             return
@@ -340,53 +340,67 @@ class Main:
     def add_exhibit_to_collection(self, coll_id):
         print("Добавление экспоната (q — отмена)")
 
+        data = {}
+
         name = input_text("Название: ")
+        if name != "": data['name'] = name
         if name == "q": return
 
+
         description = input_text("Описание: ")
+        if description != "": data['description'] = description
         if description == "q": return
 
         insurance_value = input_num("Страховая стоимость (enter = 0): ")
+        if insurance_value != "": data['insurance_value'] = insurance_value
         if insurance_value == "q": return
 
         century = input_num("Век (<21): ", onlyint=True)
+        if century != "": data['century'] = century
         if century == "q": return
 
         hall_id = input_num("Номер зала: ", onlyint=True)
+        if hall_id != "": data['hall_id'] = hall_id
         if hall_id == "q": return
 
         height = input_num("Высота (>0): ")
+        if height != "": data['height'] = height
         if height == "q": return
 
         width = input_num("Ширина (>0): ")
+        if width != "": data['width'] = width
         if width == "q": return
 
         length = input_num("Длина (>0): ")
+        if length != "": data['length'] = length
         if length == "q": return
 
         need_temp = input_yn("Требуется контроль температуры (enter = y) y/N?")
+        if need_temp != "": data['need_temp'] = need_temp
         if need_temp == "q": return
 
         need_hum = input_yn("Требуется контроль влажности (enter = y) y/N?")
+        if need_hum != "": data['need_hum'] = need_hum
         if need_hum == "q": return
 
         protected = input_yn("Защита от людей (enter = y) y/N?")
+        if protected != "": data['protected'] = protected
         if protected == "q": return
 
-        data = {
-            "name": name,
-            "description": description,
-            "insurance_value": insurance_value,
-            "century": century,
-            "collection_id": coll_id,
-            "hall_id": hall_id,
-            "height": height,
-            "width": width,
-            "length": length,
-            "need_temp_control": need_temp,
-            "need_humidity_control": need_hum,
-            "protected_from_people": protected
-        }
+        # data = {
+        #     "name": name,
+        #     "description": description,
+        #     "insurance_value": insurance_value,
+        #     "century": century,
+        #     "collection_id": coll_id,
+        #     "hall_id": hall_id,
+        #     "height": height,
+        #     "width": width,
+        #     "length": length,
+        #     "need_temp_control": need_temp,
+        #     "need_humidity_control": need_hum,
+        #     "protected_from_people": protected
+        # }
 
         ExhibitsTable().insert_one(data)
         print("Экспонат добавлен.")
@@ -485,20 +499,34 @@ class Main:
         rec = lst[pos - 1]  # ← БЕРЁМ ИЗ СПИСКА КОЛЛЕКЦИИ
         ex_id = rec[0]
 
-        print(f"Редактирование экспоната: {rec[1]}")
+        print(f"Редактирование экспоната(q - отмена, enter - оставить [старое значение]): {rec[1]}")
 
-        old = {
-            "name": rec[1],
-            "description": rec[2],
+        fields = {
+            "name": (rec[1], input_text),
+            "description": (rec[2], input_text),
+            "insurance_value": (rec[3], input_num),
+            "century": (rec[4], lambda p: input_num(p, onlyint=True)),
+            "hall_id": (rec[6], lambda p: input_num(p, onlyint=True)),
+            "height": (rec[7], input_num),
+            "width": (rec[8], input_num),
+            "length": (rec[9], input_num),
+            "need_temp_control": (rec[10], input_yn),
+            "need_humidity_control": (rec[11], input_yn),
+            "protected_from_people": (rec[12], input_yn),
         }
 
         data = {}
-        for col, oldv in old.items():
-            raw = input_text(f"{col} [{oldv}] (q - отмена, enter - оставить старое значение): ").strip()
-            if raw == "q":
+        for col, (oldv, input_fn) in fields.items():
+            # raw = input_text(f"{col} [{oldv}] (q - отмена, enter - оставить старое значение): ")
+            raw = input_fn(f"{col} [{oldv}]: ")
+
+            if raw == "quit":
                 return
-            if raw == "raw":
+
+            # ENTER → оставить старое
+            if raw in ("", "/old"):
                 continue
+
             data[col] = raw
 
         ExhibitsTable().update_ents(("id", ex_id), data)

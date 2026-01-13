@@ -61,6 +61,9 @@ class DbTable:
 		"""
 			обычные значения → col = %s
 		"""
+		if not data:
+			print("Нет изменений — обновление не выполнено.")
+			return
 
 		# --- Валидация перед выполнением ---
 		errors = self.validate(data)
@@ -76,11 +79,11 @@ class DbTable:
 			columns.append(col)
 
 			# DEFAULT (без placeholder)
-			if val == "DEFAULT":
-				placeholders.append("DEFAULT")
+			# if val == "DEFAULT":
+			# 	placeholders.append("DEFAULT")
 
 			# NULL (без placeholder)
-			elif val is None:
+			if val is None:
 				placeholders.append("NULL")
 
 			# обычное значение → %s + добавление в values
@@ -98,11 +101,14 @@ class DbTable:
 			cur = self.dbconn.conn.cursor()
 			cur.execute(sql, values)
 			self.dbconn.conn.commit()
-		except Exception as e:
+		except psycopg2.Error as e:
+			self.dbconn.conn.rollback()
 			print("Ошибка БД при вставке:")
 			print("  SQL:", sql)
 			print("  VALUES:", values)
 			print("  Ошибка:", e)
+			print("Действие отменено")
+			return
 		print(f"Запись успешно добавлена в {self.table_name()}")
 
 	def first(self):
@@ -140,9 +146,18 @@ class DbTable:
 			sql += f" WHERE {col} = %s"
 			params = (val,)
 
-		cur = self.dbconn.conn.cursor()
-		cur.execute(sql, params)
-		self.dbconn.conn.commit()
+		try:
+			cur = self.dbconn.conn.cursor()
+			cur.execute(sql, params)
+			self.dbconn.conn.commit()
+		except psycopg2.Error as e:
+			self.dbconn.conn.rollback()
+			print("Ошибка БД при удалении:")
+			print("  SQL:", sql)
+			print("  VALUES:", params)
+			print("  Ошибка:", e)
+			print("Действие отменено")
+			return
 
 	def update_ents(self, where: tuple, data: dict):
 		"""
@@ -185,11 +200,14 @@ class DbTable:
 			cur = self.dbconn.conn.cursor()
 			cur.execute(sql, values)
 			self.dbconn.conn.commit()
-		except Exception as e:
+		except psycopg2.Error as e:
+			self.dbconn.conn.rollback()
 			print("Ошибка БД при обновлении:")
 			print("  SQL:", sql)
 			print("  VALUES:", values)
 			print("  Ошибка:", e)
+			print("Действие отменено")
+			return
 
 
 

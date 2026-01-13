@@ -59,9 +59,6 @@ class DbTable:
 
 	def insert_one(self, data: dict):
 		"""
-		INSERT с поддержкой:
-			NULL      → ... col = NULL
-			DEFAULT   → ... col = DEFAULT
 			обычные значения → col = %s
 		"""
 
@@ -150,10 +147,12 @@ class DbTable:
 	def update_ents(self, where: tuple, data: dict):
 		"""
 		UPDATE с поддержкой:
-			NULL → col = NULL
-			DEFAULT → col = DEFAULT
 			обычные значения → col = %s
 		"""
+		# если изменений нет
+		if not data:
+			print("Нет изменений — обновление не выполнено.")
+			return
 
 		errors = self.validate(data)
 		if errors:
@@ -164,19 +163,13 @@ class DbTable:
 		values = []
 
 		for col, val in data.items():
+			sets.append(f"{col}=%s")
+			values.append(val)
 
-			# DEFAULT
-			if val == "DEFAULT":
-				sets.append(f"{col}=DEFAULT")
-
-			# NULL
-			elif val is None:
-				sets.append(f"{col}=NULL")
-
-			# обычное значение
-			else:
-				sets.append(f"{col}=%s")
-				values.append(val)
+		# Защита от пустого SET (на всякий случай)
+		if not sets:
+			print("Нет полей для обновления.")
+			return
 
 		# where — это tuple вида ("id", 5)
 		where_col, where_val = where

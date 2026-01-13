@@ -129,6 +129,7 @@ class Main:
         return table, table.columns(), table.all()
 
     def after_show_collections_menu(self): # X
+        print('menu')
         menu = {
             "3": "Добавить коллекцию",
             "4": "Удалить коллекцию",
@@ -140,6 +141,7 @@ class Main:
         self.print_menu(menu)
 
     def after_show_collections(self, cmd):
+        # print('no menu')
         menu = {
             "3": "Добавить коллекцию",
             "4": "Удалить коллекцию",
@@ -149,7 +151,7 @@ class Main:
             "9": "Выход"
         }
 
-        self.print_menu(menu)
+        # self.print_menu(menu)
 
         if cmd not in menu:
             print("Неизвестная команда.")
@@ -228,14 +230,16 @@ class Main:
             print("Неизвестная команда.")
 
     def add_collection(self):
-        print("Добавление коллекции (q — отмена, Null = NULL)")
+        print("Добавление коллекции (q — отмена)")
 
-        name = input_text("Название: ")
-        if name == "quit":
+        name = input("Название: ").strip()
+        if name == "q":
+            print("Отмена")
             return
 
-        description = input_text("Описание: ")
-        if description == "quit":
+        description = input("Описание: ").strip()
+        if description == "q":
+            print("Отмена")
             return
 
         data = {
@@ -252,13 +256,26 @@ class Main:
             print("Список коллекций пуст.")
             return None
         while True:
-            num = input_num("Укажите номер строки коллекции (q - отмена): ", onlyint=True)
-            if num == "q":
+            raw = input("Укажите номер строки коллекции (q - отмена): ").strip()
+
+            if raw == "q":
                 return None
-            if num is None or num < 1 or num > len(lst):
+
+            if raw == "":
+                print("Введите номер строки или 'q' для отмены.")
+                continue
+
+            if not raw.isdigit():
+                print("Нужно ввести число.")
+                continue
+
+            num = int(raw)
+
+            if num < 1 or num > len(lst):
                 print("Неверный номер. Повторите ввод.")
                 continue
-            return CollectionsTable().find_by_position(int(num))
+
+            return CollectionsTable().find_by_position(num)
 
     def delete_collection(self):
         coll = self.choose_collection_by_row()
@@ -266,8 +283,7 @@ class Main:
             return
         coll_id = coll[0]
         # confirm
-        ok = input(
-            f"Подтвердите удаление коллекции '{coll[1]}' (y/N): ").strip().lower()
+        ok = input(f"Подтвердите удаление коллекции '{coll[1]}' (y/n): ").strip()
         if ok != "y":
             print("Отмена удаления.")
             return
@@ -285,10 +301,10 @@ class Main:
         colmap = {"name": row[1], "description": row[2]}
 
         for col, old in colmap.items():
-            raw = input_text(f"{col} [{old}] (Null = NULL, / - оставить старое значение): ")
-            if raw == "quit":
+            raw = input(f"{col} [{old}] (q - выход, enter - оставить старое значение): ")
+            if raw == "q":
                 return
-            if raw == "/old":
+            if raw == "":
                 continue  # для старого значения просто не включать в запрос
             data[col] = raw  # None = NULL, строка = новое
 
@@ -322,40 +338,40 @@ class Main:
         return table, table.columns(), rows, coll_id
 
     def add_exhibit_to_collection(self, coll_id):
-        print("Добавление экспоната (q — отмена, Null = NULL, enter = default)")
+        print("Добавление экспоната (q — отмена)")
 
         name = input_text("Название: ")
-        if name == "quit": return
+        if name == "q": return
 
         description = input_text("Описание: ")
-        if description == "quit": return
+        if description == "q": return
 
         insurance_value = input_num("Страховая стоимость (enter = 0): ")
-        if insurance_value == "quit": return
+        if insurance_value == "q": return
 
         century = input_num("Век (<21): ", onlyint=True)
-        if century == "quit": return
+        if century == "q": return
 
         hall_id = input_num("Номер зала: ", onlyint=True)
-        if hall_id == "quit": return
+        if hall_id == "q": return
 
         height = input_num("Высота (>0): ")
-        if height == "quit": return
+        if height == "q": return
 
         width = input_num("Ширина (>0): ")
-        if width == "quit": return
+        if width == "q": return
 
         length = input_num("Длина (>0): ")
-        if length == "quit": return
+        if length == "q": return
 
         need_temp = input_yn("Требуется контроль температуры (enter = y) y/N?")
-        if need_temp == "quit": return
+        if need_temp == "q": return
 
         need_hum = input_yn("Требуется контроль влажности (enter = y) y/N?")
-        if need_hum == "quit": return
+        if need_hum == "q": return
 
         protected = input_yn("Защита от людей (enter = y) y/N?")
-        if protected == "quit": return
+        if protected == "q": return
 
         data = {
             "name": name,
@@ -478,10 +494,10 @@ class Main:
 
         data = {}
         for col, oldv in old.items():
-            raw = input_text(f"{col} [{oldv}] (Null = NULL, / = оставить): ")
-            if raw == "quit":
+            raw = input_text(f"{col} [{oldv}] (q - отмена, enter - оставить старое значение): ").strip()
+            if raw == "q":
                 return
-            if raw == "/old":
+            if raw == "raw":
                 continue
             data[col] = raw
 

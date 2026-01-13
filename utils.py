@@ -26,7 +26,6 @@ def input_text(prompt: str):
 	"""
 	Возвращает:
 		"quit"   → отмена
-		None     → NULL
 		""       → пропуск (skip) в update
 		строку   → текст
 		"/"      -> оставить старое значение (для update)
@@ -35,8 +34,6 @@ def input_text(prompt: str):
 
 	if s == "q":
 		return "quit"
-	if s.lower() == "null":
-		return None  # NULL
 	if s.lower().strip() in ("default", ""):
 		return "DEFAULT"  # DEFAULT keyword
 	if s == "/":
@@ -221,7 +218,7 @@ def table_paginator(page_size=5):
 						row_line.append(f"{val_str:<{w}}")
 					print(" | ".join(row_line))
 
-				print("\n< - назад, > - вперёд, 0 - выход")
+				print("\n< - назад, > - вперёд, 0 - действия")
 				cmd = input("=> ").strip()
 
 				if cmd == "<" and page > 1:

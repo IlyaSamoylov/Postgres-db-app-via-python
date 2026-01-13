@@ -85,7 +85,7 @@ class ExhibitsTable(DbTable):
 
 	def validate(self, data: dict):
 		MAX_NAME = 50
-		MAX_DESC = 5000
+		MAX_DESC = 500
 
 		errors = []
 
@@ -99,12 +99,6 @@ class ExhibitsTable(DbTable):
 				if col not in defaults:
 					errors.append(
 						f"{col}: значение DEFAULT недоступно (нет DEFAULT в таблице).")
-				continue
-
-			# NULL
-			if val is None:
-				if col in not_null:
-					errors.append(f"{col} не может быть NULL.")
 				continue
 
 			# --- name ---

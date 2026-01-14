@@ -60,7 +60,7 @@ class ExhibitsTable(DbTable):
 	# Удаление сущностей нужно обоим таблицам, так что пусть определяется в родительском классе
 
 	def select_by_col_id(self, collection_id):
-		sql = f"SELECT * FROM {self.table_name()} WHERE collection_id = %s"
+		sql = f"SELECT * FROM {self.table_name()} WHERE collection_id = %s  ORDER BY {self.primary_key()[0]}"
 		cur = self.dbconn.conn.cursor()
 		cur.execute(sql, (collection_id,))
 		return cur.fetchall()

@@ -33,6 +33,7 @@ class Main:
 
     def __init__(self): # X
         DbTable.dbconn = self.connection
+        self._last_coll_id = None
         return
 
     def db_init(self): # X
@@ -183,10 +184,11 @@ class Main:
             return "1"
 
         if cmd == "5":
-            # сначала показать экспонаты
-            coll_ctx, rows = self.show_exhibits_by_collection()
-            # затем меню экспонатов
-            return self.after_show_exhibits(coll_ctx, rows)
+            coll = self.choose_collection_by_row()
+            if coll is None:
+                return "1"
+            self._last_coll_id = coll[0]
+            return "5"
 
         if cmd == "6":
             self.edit_collection()
@@ -208,13 +210,6 @@ class Main:
         for k, v in menu.items():
             print(f"{k} {v}")
 
-        # Если coll_id уже известен — используем его; иначе предложим выбрать
-        if coll_id is None:
-            coll = self.choose_collection_by_row()
-            if coll is None:
-                return "1"  # вернёмся к просмотру коллекций
-            coll_id = coll[0]
-
         # Если rows не переданы, загрузим их
         if rows is None:
             rows = ExhibitsTable().select_by_col_id(coll_id)
@@ -223,24 +218,16 @@ class Main:
             cmd = self.read_next_step()
 
             if cmd == "6":
-                # Добавить экспонат в известную коллекцию
                 self.add_exhibit_to_collection(coll_id)
-                # после добавления остаёмся в том же меню (показать заново)
                 return "5"
 
             if cmd == "7":
-                # Удалить — используем переданные rows (или вновь загружаем)
-                if not rows:
-                    rows = ExhibitsTable().select_by_col_id(coll_id)
                 self.delete_exhibit_from_list(rows)
                 return "5"
 
             if cmd == "8":
-                if not rows:
-                    rows = ExhibitsTable().select_by_col_id(coll_id)
                 self.edit_exhibit_in_list(rows)
                 return "5"
-
             if cmd in ("1", "0", "9"):
                 return cmd
 
@@ -482,6 +469,13 @@ class Main:
         ExhibitsTable().update_ents(("id", ex_id), data)
         print("Экспонат обновлён.")
 
+    @table_paginator(page_size=5)
+    def show_exhibits_by_collection_cached(self, coll_id):
+        table = ExhibitsTable()
+        rows = table.select_by_col_id(coll_id)
+        return table, table.columns(), rows, coll_id
+
+
     # MAIN cycle
     def main_cycle(self):
         current_menu = "0"
@@ -498,12 +492,15 @@ class Main:
                 current_menu = self.after_show_collections(next_step)
             elif current_menu == "2":
                 self.show_main_menu()
+
+            elif current_menu == "5":
+                coll_id = self._last_coll_id
+                coll_id, rows = self.show_exhibits_by_collection_cached(coll_id)
+                current_menu = self.after_show_exhibits(coll_id, rows)
+
             elif current_menu == "3":
                 self.show_add_collection()
                 current_menu = "1"
-            elif current_menu == "5":  # <<< ЭТО ДОБАВИТЬ
-                coll_ctx, rows = self.show_exhibits_by_collection()
-                current_menu = self.after_show_exhibits(coll_ctx, rows)
 
         print("До свидания!")
         return

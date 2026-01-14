@@ -1,13 +1,13 @@
 # Таблица коллекций и особые действия с ней
 
-from dbtable import *
+from ProjectPostgreSQL.dbtable import *
 
 class ExhibitsTable(DbTable):
 	def table_name(self):
 		return self.dbconn.prefix + "exhibits"
 
 	def columns(self):
-		# можно ли здесь оставить CHECK/DEFAULT
+
 		return {"id": ["serial", "PRIMARY KEY"],
 				"name": ["varchar(50)", "NOT NULL"],
 				"description": ["text"],
@@ -57,10 +57,6 @@ class ExhibitsTable(DbTable):
 		cur.execute(sql, str(col_id))
 		return cur.fetchall()
 
-	# TODO: для таблицы Exhibits доработать функции просмотр списка сущностей по
-	#  указанному значению ключа из первой таблицы, добавление новых сущностей с этим ключом
-	#  (включая все проверки целостности данных и соответствия типам данных), удаление сущностей
-	#  в этом же интерфейсе. Без суррогатных ключей, только нетехнические записи и номер на экране
 	# Удаление сущностей нужно обоим таблицам, так что пусть определяется в родительском классе
 
 	def select_by_col_id(self, collection_id):
@@ -101,7 +97,7 @@ class ExhibitsTable(DbTable):
 						f"{col}: значение DEFAULT недоступно (нет DEFAULT в таблице).")
 				continue
 
-			# --- name ---
+			# name
 			if col == "name":
 				if not isinstance(val, str):
 					errors.append("name должно быть строкой.")
@@ -111,7 +107,7 @@ class ExhibitsTable(DbTable):
 					if len(val) > MAX_NAME:
 						errors.append(f"Слишком длинное имя (> {MAX_NAME}).")
 
-			# --- description ---
+			# description
 			elif col == "description":
 				if not isinstance(val, str):
 					errors.append("description должно быть строкой.")
@@ -119,7 +115,7 @@ class ExhibitsTable(DbTable):
 					if len(val) > MAX_DESC:
 						errors.append(f"Описание слишком длинное (> {MAX_DESC}).")
 
-			# --- insurance_value ---
+			# insurance_value
 			elif col == "insurance_value":
 				if not isinstance(val, (int, float)):
 					errors.append("insurance_value должно быть числом.")
@@ -135,35 +131,35 @@ class ExhibitsTable(DbTable):
 					if len(s.replace(".", "")) > 12:
 						errors.append("Слишком много цифр в insurance_value.")
 
-			# --- century ---
+			# century
 			elif col == "century":
 				if not isinstance(val, int):
 					errors.append("century должен быть целым.")
 				elif not (-32768 <= val <= 21):
 					errors.append("century должен быть в диапазоне -32768..21.")
 
-			# --- col_id ---
+			# col_id
 			elif col == "collection_id":
 				if not isinstance(val, int):
 					errors.append("collection_id должен быть целым.")
 				elif not (0 < val):
 					errors.append("collection_id не может быть меньше 0")
 
-			# --- dimensions (height/width/length) ---
+			# dimensions (height/width/length)
 			elif col in ("height", "width", "length"):
 				if not isinstance(val, (int, float)):
 					errors.append(f"{col} должно быть числом.")
 				elif val <= 0:
 					errors.append(f"{col} должно быть > 0.")
 
-			# --- hall_id ---
+			# hall_id
 			elif col == "hall_id":
 				if not isinstance(val, int):
 					errors.append("hall_id должно быть целым числом.")
 				elif val <= 0:
 					errors.append("hall_id должно быть > 0.")
 
-			# --- flags ---
+			# flags
 			elif col in ("need_temp_control", "need_humidity_control",
 			             "protected_from_people"):
 				if val not in ("y", "n"):

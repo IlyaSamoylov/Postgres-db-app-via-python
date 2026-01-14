@@ -1,6 +1,5 @@
 # Таблица коллекций и особые действия с ней
-# TODO: Отлов неправильного ввода через try...except
-from dbtable import *
+from ProjectPostgreSQL.dbtable import *
 
 class CollectionsTable(DbTable):
     def table_name(self):
@@ -70,9 +69,6 @@ class CollectionsTable(DbTable):
         for e in errors:
             print(" -", e)
         return errors
-
-    # TODO: для таблицы Collections доработать функции удаления и редактирования сущностей.
-    #  Интерфейс не должен работать с id!
 
     # Удаление сущностей нужно обоим таблицам, так что пусть определяется в родительском классе
 

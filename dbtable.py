@@ -1,8 +1,4 @@
 # Базовые действия с таблицами
-# TODO: Сделано или все таки пока нет:
-#  доработав все проверки целостности данных и соответствия типам данных (не должно при
-#  добавлении, и других действиях происходить ошибок PostgreSQL, приводящих к «вылету» программы
-#  или действиям программы, не имеющим нормальных объяснений).
 from dbconnection import *
 
 class DbTable:
@@ -18,16 +14,13 @@ class DbTable:
 		return {"test": ["integer", "PRIMARY KEY"]}
 
 	def column_names(self):
-		# Снова, зачем?
-		# return sorted(self.columns().keys(), key = lambda x: x)
 		return list(self.columns().keys())
 
 	def primary_key(self):
 		return ['id']
 
 	def column_names_without_id(self):
-		# Зачем была эта сортировка колонок таблицы?!
-		# res = sorted(self.columns().keys(), key = lambda x: x)
+
 		res = list(self.columns().keys())
 		if 'id' in res:
 			res.remove('id')
@@ -37,9 +30,7 @@ class DbTable:
 		return []
 
 	def create(self):
-		# Зачем сортировка колонок бл*ть?!
-		# arr = [k + " " + " ".join(v) for k, v in
-		#        sorted(self.columns().items(), key=lambda x: x[0])]
+
 		arr = [k + " " + " ".join(v) for k, v in list(self.columns().items())]
 
 		cols = ", ".join(arr + self.table_constraints())
@@ -77,10 +68,6 @@ class DbTable:
 
 		for col, val in data.items():
 			columns.append(col)
-
-			# DEFAULT (без placeholder)
-			# if val == "DEFAULT":
-			# 	placeholders.append("DEFAULT")
 
 			# NULL (без placeholder)
 			if val is None:

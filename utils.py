@@ -1,27 +1,3 @@
-# TODO: Спросить, как добавить в проект prettytable, чтобы у преподавателя тоже добавился
-# Валидация
-# TODO" Наверное стоит настроить отмены на какие-то значения, которые редко вписсывают,
-#  например None, все равно вместо им можно заполнять, если нажмут enter
-# def input_opt(prompt, nonempty=False):
-# 	"""
-# 	Проверяет:
-# 		- нажал ли пользователь 1 (отмена)
-# 		- ввел ли пользователь пустую строку, если она запрещена (nonempty = True)
-#
-# 	Возвращает:
-# 		- None, если введена отмена
-# 		- Значение либо пусто, если nonempty = False
-# 	"""
-# 	while True:
-# 		s = input(prompt).strip()
-#
-# 		if s == "1":
-# 			return None
-# 		if nonempty and len(s) == 0:
-# 			print("Поле не может быть пустым. Введите заново (или 1 для отмены).")
-# 			continue
-# 		return s
-
 def input_text(prompt: str):
 	"""
 	Возвращает:
@@ -34,34 +10,11 @@ def input_text(prompt: str):
 
 	if s == "q":
 		return "quit"
-	# if s.lower().strip() in ("default", ""):
-	# 	return "DEFAULT"  # DEFAULT keyword
+
 	if s == '':
 		return ''
-	# if s == "/":
-	# 	return "/old"
+
 	return s  # значение или ""
-
-#
-# def val_input_num(prompt, onlyint=False):
-# 	"""
-# 	Проверяет, ввел ли пользователь целое число.
-# 	Если isfloat = True, то оно может быть float
-# 	"""
-# 	while True:
-# 		s = input(prompt).strip()
-#
-# 		if s == "0":
-# 			return None
-# 		try:
-# 			v = float(s)
-# 			if onlyint:
-# 				v = int(s)
-# 		except ValueError:
-# 			print("Невалидное число. Повторите ввод (или 0 для отмены).")
-# 			continue
-# 		return v
-
 
 def input_num(prompt, onlyint=False):
 	while True:
@@ -72,45 +25,10 @@ def input_num(prompt, onlyint=False):
 		if raw == "":
 			return ""
 
-		# if raw in ("quit", None, "DEFAULT"):
-		# 	return raw
-		# if raw == "":
-		# 	return "DEFAULT"
-		# if raw == "/":
-		# 	return "/old"
-
 		try:
 			return int(raw) if onlyint else float(raw)
 		except:
 			print("Введите число или 'q'.")
-
-
-
-# def input_char_yn(prompt, default="y"):
-# 	while True:
-# 		s = input(prompt + f" (y/n, ENTER для {default}):").strip()
-#
-# 		if s == "":
-# 			return default
-# 		if s not in ("y", "n"):
-# 			print("Введите 'y' или 'n'.")
-# 			continue
-# 		return s
-
-# def input_yn(prompt: str, default="y"):
-# 	while True:
-# 		s = input_text(prompt + f" (y/n, ENTER={default}): ")
-#
-# 		if s in ("quit", ""):
-# 			return s
-#
-# 		if s is None:
-# 			return None
-#
-# 		if s.lower() in ("y", "n"):
-# 			return s.lower()
-#
-# 		print("Введите y или n.")
 
 def input_yn(prompt, default="y"):
 	while True:
@@ -150,10 +68,6 @@ def build_readable_columns(table_obj):
 	readable = [COLUMN_NAMES_MAP.get(col, col) for col in col_names]
 	return col_names, readable
 
-# TODO: Вместо номеров пишутся id - нехорошо. Как сопоставить номер строки на экране и id?
-# Новый вариант: перед каждой строкой выводится нормальный порядковый номер,
-# а не id из таблицы.
-
 def table_paginator(page_size=5):
 
 	def decorator(func):
@@ -175,7 +89,7 @@ def table_paginator(page_size=5):
 				print("Нет данных (структура таблицы не определена).")
 				return ctx, rows
 
-			# ✔ правильно: берём колонки БЕЗ id
+
 			col_order = table_obj.column_names_without_id()
 			human_headers = [COLUMN_NAMES_MAP.get(c, c) for c in col_order]
 
@@ -183,12 +97,10 @@ def table_paginator(page_size=5):
 				print("Нет данных.")
 				return ctx, rows
 
-			# ✔ правильно: ищем ИНДЕКСЫ этих колонок внутри row,
 			#   используя полный список column_names()
 			full_cols = table_obj.column_names()
 			row_indexes = [full_cols.index(c) for c in col_order]
 
-			# ✔ вычисляем ширины колонок
 			col_widths = []
 			for idx, h in zip(row_indexes, human_headers):
 				max_content_width = max([len(str(row[idx])) for row in rows] + [len(h)])
@@ -213,7 +125,7 @@ def table_paginator(page_size=5):
 				print(header_line)
 				print("-" * len(header_line))
 
-				# ✔ печать строк без id
+
 				for i, row in enumerate(page_items, start=start + 1):
 					row_line = [f"{i:<4}"]  # порядковый номер
 					for idx, w in zip(row_indexes, col_widths):

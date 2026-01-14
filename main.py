@@ -24,6 +24,7 @@ from dbconnection import *
 from tables.collections_table import *
 from tables.exhibits_table import *
 from utils import *
+from dbtable import *
 
 class Main:
 
@@ -45,7 +46,6 @@ class Main:
         colt = CollectionsTable()
         ext = ExhibitsTable()
 
-        #  Не забыть, что надо также проверять валидность данных
         colt.insert_one({
             "name": "Челябинский метеорит и космо-наследие",
             "description": "Коллекция, посвящённая знаменитому челябинскому метеориту — его фрагменты, история падения и исследования."
@@ -323,7 +323,7 @@ class Main:
                 return
             if raw == "":
                 continue  # для старого значения просто не включать в запрос
-            data[col] = raw  # None = NULL, строка = новое
+            data[col] = raw
 
         CollectionsTable().update_ents(("id", row[0]), data)
         print("Запись обновлена.")
@@ -404,44 +404,8 @@ class Main:
         if protected != "": data['protected_from_people'] = protected
         if protected == "q": return
 
-        # data = {
-        #     "name": name,
-        #     "description": description,
-        #     "insurance_value": insurance_value,
-        #     "century": century,
-        #     "collection_id": coll_id,
-        #     "hall_id": hall_id,
-        #     "height": height,
-        #     "width": width,
-        #     "length": length,
-        #     "need_temp_control": need_temp,
-        #     "need_humidity_control": need_hum,
-        #     "protected_from_people": protected
-        # }
-
         ExhibitsTable().insert_one(data)
         print("Экспонат добавлен.")
-
-    # def delete_exhibit_from_list(self, lst):
-    #     if not lst:
-    #         print("Нет экспонатов для удаления.")
-    #         return
-    #     while True:
-    #         num = input_num("Номер строки экспоната для удаления (0 - отмена): ", onlyint=True )
-    #         if num == "0":
-    #             return
-    #         if num is None or num < 1 or num > len(lst):
-    #             print("Неверный номер.")
-    #             continue
-    #         row = lst[int(num) - 1]
-    #         ex_id = row[0]
-    #         ok = input(f"Подтвердите удаление '{row[1]}' (y/N): ").strip().lower()
-    #         if ok != "y":
-    #             print("Отмена")
-    #             return
-    #         ExhibitsTable().del_entities(("id", ex_id))
-    #         print("Экспонат удалён.")
-    #         return
 
     def delete_exhibit_from_list(self, lst):
         if not lst:
@@ -469,36 +433,6 @@ class Main:
             ExhibitsTable().del_entities(("id", ex_id))
             print("Экспонат удалён.")
             return
-
-    # def edit_exhibit_in_list(self, lst):
-    #     if not lst:
-    #         print("Нет экспонатов.")
-    #         return
-    #
-    #     pos = input_num("Номер строки (q — отмена): ", onlyint=True)
-    #     if pos == "quit": return
-    #
-    #     rec = ExhibitsTable().find_by_position(int(pos))
-    #     if rec is None:
-    #         print("Неверный номер.")
-    #         return
-    #
-    #     ex_id = rec[0]
-    #     print(f"Редактирование экспоната: {rec[1]}")
-    #
-    #     old = {
-    #         "name": rec[1],
-    #         "description": rec[2],
-    #     }
-    #
-    #     data = {}
-    #     for col, oldv in old.items():
-    #         raw = input_text(f"{col} [{oldv}] (ENTER = NULL): ")
-    #         if raw == "quit": return
-    #         data[col] = raw
-    #
-    #     ExhibitsTable().update_ents(ex_id, data)
-    #     print("Экспонат обновлён.")
 
     def edit_exhibit_in_list(self, lst):
         if not lst:
@@ -534,7 +468,6 @@ class Main:
 
         data = {}
         for col, (oldv, input_fn) in fields.items():
-            # raw = input_text(f"{col} [{oldv}] (q - отмена, enter - оставить старое значение): ")
             raw = input_fn(f"{col} [{oldv}]: ")
 
             if raw == "quit":

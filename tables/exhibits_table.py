@@ -1,6 +1,6 @@
 # Таблица коллекций и особые действия с ней
 
-from ProjectPostgreSQL.dbtable import *
+from dbtable import *
 
 class ExhibitsTable(DbTable):
 	def table_name(self):

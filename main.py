@@ -296,7 +296,7 @@ class Main:
 
     def edit_collection(self):
         row = self.choose_collection_by_row()
-        print(row)
+
         if not row:
             print("Не найдено.")
             return
@@ -320,10 +320,12 @@ class Main:
         name = input_text("Введите название коллекции (q - отмена): ")
         if name is None:
             return
+        if name == "quit": return
 
         desc = input_text("Введите описание (q - отмена): ")
         if desc is None:
             return
+        if name == 'quit': return
         CollectionsTable().insert_one({"name":name, "description":desc})
         print("Коллекция успешно добавлена")
         return
@@ -348,48 +350,48 @@ class Main:
 
         name = input_text("Название: ")
         if name != "": data['name'] = name
-        if name == "q": return
+        if name == "quit": return
 
 
         description = input_text("Описание: ")
         if description != "": data['description'] = description
-        if description == "q": return
+        if description == "quit": return
 
         insurance_value = input_num("Страховая стоимость (enter = 0): ")
         if insurance_value != "": data['insurance_value'] = insurance_value
-        if insurance_value == "q": return
+        if insurance_value == "quit": return
 
         century = input_num("Век (<21): ", onlyint=True)
         if century != "": data['century'] = century
-        if century == "q": return
+        if century == "quit": return
 
         hall_id = input_num("Номер зала: ", onlyint=True)
         if hall_id != "": data['hall_id'] = hall_id
-        if hall_id == "q": return
+        if hall_id == "quit": return
 
         height = input_num("Высота (>0): ")
         if height != "": data['height'] = height
-        if height == "q": return
+        if height == "quit": return
 
         width = input_num("Ширина (>0): ")
         if width != "": data['width'] = width
-        if width == "q": return
+        if width == "quit": return
 
         length = input_num("Длина (>0): ")
         if length != "": data['length'] = length
-        if length == "q": return
+        if length == "quit": return
 
         need_temp = input_yn("Требуется контроль температуры (enter = y) y/n? ")
+        if need_temp == "quit": return
         if need_temp != "": data['need_temp_control'] = need_temp
-        if need_temp == "q": return
 
         need_hum = input_yn("Требуется контроль влажности (enter = y) y/n? ")
+        if need_hum == "quit": return
         if need_hum != "": data['need_humidity_control'] = need_hum
-        if need_hum == "q": return
 
         protected = input_yn("Защита от людей (enter = y) y/n? ")
+        if protected == "quit": return
         if protected != "": data['protected_from_people'] = protected
-        if protected == "q": return
 
         ExhibitsTable().insert_one(data)
         print("Экспонат добавлен.")

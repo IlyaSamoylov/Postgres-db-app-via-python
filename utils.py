@@ -40,8 +40,8 @@ def input_yn(prompt, default="y"):
 		if raw in ("y", "n"):
 			return raw
 
-		if raw == "q":
-			return 'q'
+		if raw == "quit":
+			return 'quit'
 
 		print("Введите y/n или 'q'.")
 

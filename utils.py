@@ -122,6 +122,9 @@ def input_yn(prompt, default="y"):
 		if raw in ("y", "n"):
 			return raw
 
+		if raw == "q":
+			return 'q'
+
 		print("Введите y/n или 'q'.")
 
 

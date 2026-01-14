@@ -334,7 +334,7 @@ class Main:
         if name is None:
             return
 
-        desc = input_text("Введите описание (Null - NULL, q - отмена): ")
+        desc = input_text("Введите описание (q - отмена): ")
         if desc is None:
             return
         CollectionsTable().insert_one({"name":name, "description":desc})
@@ -357,7 +357,7 @@ class Main:
     def add_exhibit_to_collection(self, coll_id):
         print("Добавление экспоната (q — отмена)")
 
-        data = {}
+        data = {'collection_id': coll_id}
 
         name = input_text("Название: ")
         if name != "": data['name'] = name
@@ -392,16 +392,16 @@ class Main:
         if length != "": data['length'] = length
         if length == "q": return
 
-        need_temp = input_yn("Требуется контроль температуры (enter = y) y/N?")
-        if need_temp != "": data['need_temp'] = need_temp
+        need_temp = input_yn("Требуется контроль температуры (enter = y) y/n? ")
+        if need_temp != "": data['need_temp_control'] = need_temp
         if need_temp == "q": return
 
-        need_hum = input_yn("Требуется контроль влажности (enter = y) y/N?")
-        if need_hum != "": data['need_hum'] = need_hum
+        need_hum = input_yn("Требуется контроль влажности (enter = y) y/n? ")
+        if need_hum != "": data['need_humidity_control'] = need_hum
         if need_hum == "q": return
 
-        protected = input_yn("Защита от людей (enter = y) y/N?")
-        if protected != "": data['protected'] = protected
+        protected = input_yn("Защита от людей (enter = y) y/n? ")
+        if protected != "": data['protected_from_people'] = protected
         if protected == "q": return
 
         # data = {
